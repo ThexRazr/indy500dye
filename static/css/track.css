@@ -1,0 +1,36 @@
+/* Track page */
+body.page-track {
+  display: block;
+  padding: 24px 24px 48px;
+  min-height: 100vh;
+}
+
+.page-track .container {
+  margin: 0 auto;
+  max-width: 900px;
+  opacity: 0.9;
+}
+
+.page-track .logo {
+  max-width: 40%;
+}
+
+/* Inline form layout */
+.page-track .inline-fields {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px auto 12px;
+}
+
+.page-track .inline-fields input {
+  width: 180px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--accent-border);
+  background: transparent;
+  color: var(--text);
+  font-family: Orbitron, sans-serif;
+}

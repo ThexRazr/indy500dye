@@ -4,23 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SoccerSense</title>
-  <!-- Styling -->
+  <!-- styling -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 </head>
 <body class="page-home">
-<!-- Background Video -->
+  <!-- background Video -->
   <div class="bg-video">
     <video autoplay muted loop playsinline preload="metadata">
       <source src="{{ url_for('static', filename='media/soccer-bg.mp4') }}" type="video/mp4" />
     </video>
   </div>
-<!-- Logo and Button Containers -->
-  <div class="container logo">
+  
+  <!-- central body for logo and buttons -->
+  <div class="hero">
     <img class="logo" src="{{ url_for('static', filename='media/soccersense.png') }}" alt="logo">
     <div class="button-container">
-      <a href="/track">Begin Tracking</a>
-      <a href="/guide">Instructions and Guide</a>
+      <a href="/track" class="btn btn-primary btn-large">Begin Tracking</a>
+      <a href="/guide" class="btn btn-secondary btn-large">Instructions and Guide</a>
     </div>
   </div>
 </body>
