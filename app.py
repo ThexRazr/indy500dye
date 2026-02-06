@@ -229,6 +229,10 @@ def save_team_pairings():
             teams.append([p1, p2])
         i += 1
     
+    # Initialize team_pairings if it doesn't exist
+    if "team_pairings" not in data:
+        data["team_pairings"] = {}
+    
     captain_key = f"captain{current_captain + 1}"
     data["team_pairings"][captain_key] = teams
     

@@ -1,0 +1,24 @@
+{
+  "players": [
+    "ggg",
+    "ddd",
+    "vv",
+    "dddr"
+  ],
+  "captains": [],
+  "teams": {
+    "captain1": [],
+    "captain2": []
+  },
+  "matches": [],
+  "phase": "voting",
+  "draft_order": [],
+  "current_draft_turn": 0,
+  "match_results": [],
+  "captain_votes": {
+    "ggg": 0,
+    "ddd": 0,
+    "vv": 0,
+    "dddr": 0
+  }
+}
