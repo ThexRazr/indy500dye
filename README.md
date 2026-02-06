@@ -1,4 +1,4 @@
-# Soccer Sense Frontend UI
+# Indy 500 Dye
 
 Frontend User Experience for the Soccer Sense Application
 
