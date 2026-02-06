@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standings - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .standings-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .leaderboard {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    
+    .captain-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 2rem;
+      padding: 1.5rem;
+      background: var(--bg);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    
+    .captain-row.winner {
+      background: linear-gradient(135deg, var(--success) 0%, #3db9b0 100%);
+      color: white;
+      border: 3px solid var(--success);
+    }
+    
+    .rank {
+      font-size: 2rem;
+      font-weight: bold;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    
+    .captain-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .captain-row.winner .rank,
+    .captain-row.winner .captain-name {
+      color: white;
+    }
+    
+    .wins-display {
+      font-size: 2rem;
+      font-weight: bold;
+      font-family: 'Bebas Neue', sans-serif;
+      color: var(--primary);
+    }
+    
+    .captain-row.winner .wins-display {
+      color: white;
+    }
+    
+    .trophy-icon {
+      font-size: 3rem;
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .result-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 3px solid var(--border);
+    }
+    
+    .result-header {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .result-matchup {
+      display: grid;
+      grid-template-columns: 2fr auto 2fr;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .result-team {
+      text-align: center;
+      padding: 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+    
+    .result-team.won {
+      background: var(--success);
+      color: white;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .captain-row {
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem;
+      }
+      
+      .trophy-icon {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>🏆 Tournament Standings</h1>
+        <div class="flex gap-2">
+          <a href="/active" class="btn btn-secondary">Back to Matches</a>
+          <a href="/" class="btn btn-secondary">Home</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="standings-container">
+        {% if captains %}
+        <div class="leaderboard">
+          <h2 class="text-center mb-3">🎖️ Captain Leaderboard</h2>
+          
+          {% if captain1_wins > captain2_wins %}
+          <div class="captain-row winner">
+            <div class="rank">1st</div>
+            <div class="captain-name">👑 {{ captains[0] }}</div>
+            <div class="wins-display">{{ captain1_wins }} Wins</div>
+            <div class="trophy-icon">🏆</div>
+          </div>
+          <div class="captain-row">
+            <div class="rank">2nd</div>
+            <div class="captain-name">{{ captains[1] }}</div>
+            <div class="wins-display">{{ captain2_wins }} Wins</div>
+            <div></div>
+          </div>
+          {% elif captain2_wins > captain1_wins %}
+          <div class="captain-row winner">
+            <div class="rank">1st</div>
+            <div class="captain-name">👑 {{ captains[1] }}</div>
+            <div class="wins-display">{{ captain2_wins }} Wins</div>
+            <div class="trophy-icon">🏆</div>
+          </div>
+          <div class="captain-row">
+            <div class="rank">2nd</div>
+            <div class="captain-name">{{ captains[0] }}</div>
+            <div class="wins-display">{{ captain1_wins }} Wins</div>
+            <div></div>
+          </div>
+          {% else %}
+          <div class="captain-row" style="border: 3px solid var(--secondary);">
+            <div class="rank">🤝</div>
+            <div class="captain-name">{{ captains[0] }}</div>
+            <div class="wins-display">{{ captain1_wins }} Wins</div>
+            <div></div>
+          </div>
+          <div class="captain-row" style="border: 3px solid var(--secondary);">
+            <div class="rank">🤝</div>
+            <div class="captain-name">{{ captains[1] }}</div>
+            <div class="wins-display">{{ captain2_wins }} Wins</div>
+            <div></div>
+          </div>
+          <p class="text-center mt-2 text-muted"><strong>It's a tie!</strong></p>
+          {% endif %}
+          
+          {% if ties > 0 %}
+          <p class="text-center mt-3 text-muted">{{ ties }} match{{ 'es' if ties != 1 }} ended in a tie</p>
+          {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if matches %}
+        <div class="card mb-3">
+          <h2 class="text-center">📊 Match Results</h2>
+        </div>
+        
+        <div class="results-grid">
+          {% for match in matches %}
+          <div class="result-card">
+            <div class="result-header">
+              <h3>Match {{ match.id }}</h3>
+              {% if match.result %}
+                {% if match.result == 'team1' %}
+                <span class="badge badge-win">{{ match.captain1 }} Won</span>
+                {% elif match.result == 'team2' %}
+                <span class="badge badge-win">{{ match.captain2 }} Won</span>
+                {% else %}
+                <span class="badge badge-tie">Tie</span>
+                {% endif %}
+              {% else %}
+              <span class="badge" style="background: var(--secondary); color: white;">Not Played</span>
+              {% endif %}
+            </div>
+            
+            <div class="result-matchup">
+              <div class="result-team {{ 'won' if match.result == 'team1' }}">
+                <div style="font-size: 0.85rem; color: {{ 'white' if match.result == 'team1' else 'var(--text-light)' }}">
+                  {{ match.captain1 }}
+                </div>
+                <div style="font-weight: 600; margin-top: 0.5rem;">
+                  {{ match.team1[0] }}<br>{{ match.team1[1] }}
+                </div>
+              </div>
+              
+              <div class="vs-text" style="font-size: 1.5rem;">VS</div>
+              
+              <div class="result-team {{ 'won' if match.result == 'team2' }}">
+                <div style="font-size: 0.85rem; color: {{ 'white' if match.result == 'team2' else 'var(--text-light)' }}">
+                  {{ match.captain2 }}
+                </div>
+                <div style="font-weight: 600; margin-top: 0.5rem;">
+                  {{ match.team2[0] }}<br>{{ match.team2[1] }}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="card text-center">
+          <h3>No tournament data yet!</h3>
+          <p class="text-muted mb-3">Start a new tournament to see standings and results here.</p>
+          <a href="/registration" class="btn btn-primary btn-large">Start Tournament</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

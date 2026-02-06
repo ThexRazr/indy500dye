@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Match Setup - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .match-setup-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .matchup-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    
+    .matchup-selectors {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    .team-selector {
+      background: var(--bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+    }
+    
+    .team-selector h4 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .team-option {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .team-option:hover {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+    
+    .team-option.selected {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .vs-divider {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+      font-family: 'Bebas Neue', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>⚔️ Create Matchups</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="match-setup-container">
+        <div class="card text-center mb-3">
+          <h2>Set Up Your Battles!</h2>
+          <p class="text-muted">
+            {{ captains[1] }} picks first, then {{ captains[0] }}, alternating until all teams are matched up
+          </p>
+        </div>
+        
+        <form method="POST" action="/match-setup/create" id="matchupForm">
+          {% set num_teams = pairings.captain1|length %}
+          {% for i in range(num_teams) %}
+          <div class="matchup-card">
+            <h3 class="text-center">
+              Match {{ i + 1 }}
+              {% if i % 2 == 0 %}
+              <span style="color: var(--secondary); font-size: 0.9rem;"> - {{ captains[1] }}, pick!</span>
+              {% else %}
+              <span style="color: var(--secondary); font-size: 0.9rem;"> - {{ captains[0] }}, pick!</span>
+              {% endif %}
+            </h3>
+            <div class="matchup-selectors">
+              <div class="team-selector">
+                <h4>{{ captains[0] }}'s Team</h4>
+                {% for team in pairings.captain1 %}
+                <button 
+                  type="button" 
+                  class="team-option" 
+                  data-match="{{ i }}" 
+                  data-side="team1" 
+                  data-idx="{{ loop.index0 }}"
+                  onclick="selectTeam({{ i }}, 'team1', {{ loop.index0 }}, '{{ team[0] }} & {{ team[1] }}')"
+                >
+                  {{ team[0] }} & {{ team[1] }}
+                </button>
+                {% endfor %}
+                <input type="hidden" name="match{{ i }}_team1_idx" id="match{{ i }}_team1" required />
+              </div>
+              
+              <div class="vs-divider">VS</div>
+              
+              <div class="team-selector">
+                <h4>{{ captains[1] }}'s Team</h4>
+                {% for team in pairings.captain2 %}
+                <button 
+                  type="button" 
+                  class="team-option" 
+                  data-match="{{ i }}" 
+                  data-side="team2" 
+                  data-idx="{{ loop.index0 }}"
+                  onclick="selectTeam({{ i }}, 'team2', {{ loop.index0 }}, '{{ team[0] }} & {{ team[1] }}')"
+                >
+                  {{ team[0] }} & {{ team[1] }}
+                </button>
+                {% endfor %}
+                <input type="hidden" name="match{{ i }}_team2_idx" id="match{{ i }}_team2" required />
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          
+          <div class="text-center mt-3">
+            <button type="submit" class="btn btn-success btn-large">
+              Finalize Matchups & Start Tournament →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const usedTeams = {
+      team1: new Set(),
+      team2: new Set()
+    };
+    
+    function selectTeam(matchNum, side, teamIdx, teamName) {
+      // Remove previous selection for this match/side
+      const prevSelected = document.querySelector(`button[data-match="${matchNum}"][data-side="${side}"].selected`);
+      if (prevSelected) {
+        const prevIdx = parseInt(prevSelected.getAttribute('data-idx'));
+        usedTeams[side].delete(prevIdx);
+        prevSelected.classList.remove('selected');
+      }
+      
+      // Add new selection
+      const btn = document.querySelector(`button[data-match="${matchNum}"][data-side="${side}"][data-idx="${teamIdx}"]`);
+      btn.classList.add('selected');
+      usedTeams[side].add(teamIdx);
+      
+      // Update hidden input
+      document.getElementById(`match${matchNum}_${side}`).value = teamIdx;
+      
+      // Disable this team in other matches
+      updateAvailability();
+    }
+    
+    function updateAvailability() {
+      document.querySelectorAll('.team-option').forEach(btn => {
+        const side = btn.getAttribute('data-side');
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        const matchNum = parseInt(btn.getAttribute('data-match'));
+        
+        // Check if this team is used elsewhere
+        const isUsedElsewhere = usedTeams[side].has(idx) && !btn.classList.contains('selected');
+        
+        if (isUsedElsewhere) {
+          btn.style.opacity = '0.3';
+          btn.style.pointerEvents = 'none';
+        } else {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        }
+      });
+    }
+    
+    // Form validation
+    document.getElementById('matchupForm').addEventListener('submit', (e) => {
+      const requiredInputs = document.querySelectorAll('input[type="hidden"][required]');
+      let allFilled = true;
+      
+      requiredInputs.forEach(input => {
+        if (!input.value) {
+          allFilled = false;
+        }
+      });
+      
+      if (!allFilled) {
+        e.preventDefault();
+        alert('Please select teams for all matches!');
+      }
+    });
+  </script>
+</body>
+</html>

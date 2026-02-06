@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Creation - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .team-creation-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .captain-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    
+    .captain-section h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .team-pair {
+      background: var(--bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      border: 2px solid var(--border);
+    }
+    
+    .team-pair h4 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    
+    .player-selects {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .player-select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      background: white;
+    }
+    
+    .plus-icon {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>🤝 Create Your Teams of 2</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="team-creation-container">
+        <div class="card text-center mb-3">
+          <h2>{{ team_names.get('captain' + (current_captain + 1)|string, captains[current_captain] + "'s Team") }}'s Turn</h2>
+          <p class="text-muted">Pair up your players into teams of 2. Choose wisely!</p>
+        </div>
+        
+        <form method="POST" action="/team-creation/save" id="teamForm">
+          <input type="hidden" name="current_captain" value="{{ current_captain }}" />
+          
+          <div class="captain-section">
+            <h2>👑 {{ captains[current_captain] }}</h2>
+            {% set team_roster = teams['captain' + (current_captain + 1)|string] %}
+            {% set team_count = ((team_roster|length) / 2)|int %}
+            
+            {% for i in range(team_count) %}
+            <div class="team-pair">
+              <h4>Team {{ i + 1 }}</h4>
+              <div class="player-selects">
+                <select name="team{{ i }}_p1" class="player-select team{{ i }}-select" required onchange="updateAvailable()">
+                  <option value="">Select Player 1</option>
+                  {% for player in team_roster %}
+                  <option value="{{ player }}">{{ player }}</option>
+                  {% endfor %}
+                </select>
+                <span class="plus-icon">+</span>
+                <select name="team{{ i }}_p2" class="player-select team{{ i }}-select" required onchange="updateAvailable()">
+                  <option value="">Select Player 2</option>
+                  {% for player in team_roster %}
+                  <option value="{{ player }}">{{ player }}</option>
+                  {% endfor %}
+                </select>
+                <button type="button" class="btn btn-secondary" onclick="clearTeam({{ i }})" style="padding: 0.5rem 1rem;">Clear</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <div class="text-center mt-3">
+            <button type="submit" class="btn btn-success btn-large">
+              Submit Teams →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function updateAvailable() {
+      const usedPlayers = new Set();
+      
+      // Collect all selected players
+      document.querySelectorAll('.player-select').forEach(select => {
+        if (select.value) {
+          usedPlayers.add(select.value);
+        }
+      });
+      
+      // Update each select to disable used players (except current value)
+      document.querySelectorAll('.player-select').forEach(select => {
+        const currentValue = select.value;
+        Array.from(select.options).forEach(option => {
+          if (option.value && option.value !== currentValue && usedPlayers.has(option.value)) {
+            option.disabled = true;
+            option.style.color = '#ccc';
+          } else {
+            option.disabled = false;
+            option.style.color = '';
+          }
+        });
+      });
+    }
+    
+    function clearTeam(teamNum) {
+      document.querySelectorAll(`.team${teamNum}-select`).forEach(select => {
+        select.value = '';
+      });
+      updateAvailable();
+    }
+    
+    // Prevent same player twice in one team
+    document.querySelectorAll('.team-pair').forEach(pair => {
+      const selects = pair.querySelectorAll('select');
+      
+      selects.forEach((select, idx) => {
+        select.addEventListener('change', () => {
+          const otherSelect = selects[idx === 0 ? 1 : 0];
+          if (select.value && select.value === otherSelect.value) {
+            alert('Cannot select the same player twice for one team!');
+            select.value = '';
+          }
+          updateAvailable();
+        });
+      });
+    });
+    
+    // Initial update
+    updateAvailable();
+  </script>
+</body>
+</html>

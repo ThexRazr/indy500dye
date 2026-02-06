@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Names - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>👑 Name Your Teams!</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="container">
+        <div class="card text-center mb-3">
+          <h2>Captains, choose your team names!</h2>
+          <p class="text-muted">Make it legendary (or hilarious)</p>
+        </div>
+        
+        <form method="POST" action="/team-naming/save">
+          <div class="card mb-3">
+            <h3 class="text-center" style="color: var(--primary);">Captain: {{ captains[0] }}</h3>
+            <div class="form-group">
+              <label class="form-label">Team Name</label>
+              <input 
+                type="text" 
+                name="team1_name" 
+                class="form-input" 
+                placeholder="Enter team name (optional)"
+                maxlength="50"
+              />
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <h3 class="text-center" style="color: var(--primary);">Captain: {{ captains[1] }}</h3>
+            <div class="form-group">
+              <label class="form-label">Team Name</label>
+              <input 
+                type="text" 
+                name="team2_name" 
+                class="form-input" 
+                placeholder="Enter team name (optional)"
+                maxlength="50"
+              />
+            </div>
+          </div>
+          
+          <div class="text-center mt-3">
+            <button type="submit" class="btn btn-success btn-large">
+              Start Draft →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

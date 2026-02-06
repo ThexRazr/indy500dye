@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draft - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .draft-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .current-turn-banner {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .current-turn-banner h2 {
+      color: white;
+      margin: 0;
+    }
+    
+    .draft-boards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .team-board {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      border: 4px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    
+    .team-board.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+    }
+    
+    .team-board h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+    
+    .roster-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .roster-item {
+      padding: 0.8rem;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .roster-item.captain {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+      color: var(--text);
+    }
+    
+    .available-players {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+    }
+    
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .player-select-btn {
+      padding: 1rem;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+    }
+    
+    .player-select-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .draft-history {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      margin-top: 2rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .draft-pick {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    
+    @media (max-width: 968px) {
+      .draft-boards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>🎲 Snake Draft</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="draft-container">
+        {% set current_turn = current_turn %}
+        
+        {# Determine current captain based on snake draft logic #}
+        {% if current_turn == 0 %}
+          {% set current_captain = captains[0] %}
+          {% set active_team = 'captain1' %}
+        {% elif current_turn % 4 in [1, 2] %}
+          {% set current_captain = captains[1] %}
+          {% set active_team = 'captain2' %}
+        {% else %}
+          {% set current_captain = captains[0] %}
+          {% set active_team = 'captain1' %}
+        {% endif %}
+        
+        {% if available|length > 0 %}
+        <div class="current-turn-banner">
+          <h2>🎯 {{ current_captain }}'s Turn (Pick #{{ current_turn + 1 }})</h2>
+          <p style="margin: 0; font-size: 1.1rem;">Select a player below</p>
+        </div>
+        {% else %}
+        <div class="current-turn-banner" style="background: var(--success);">
+          <h2>✅ Draft Complete!</h2>
+          <p style="margin: 0.5rem 0 0 0;">
+            <a href="/team-creation" class="btn btn-primary btn-large">Proceed to Team Creation →</a>
+          </p>
+        </div>
+        {% endif %}
+        
+        <div class="draft-boards">
+          <div class="team-board {{ 'active' if active_team == 'captain1' and available|length > 0 }}">
+            <h3>👑 {{ team_names.get('captain1', captains[0] + "'s Team") }}</h3>
+            <ul class="roster-list">
+              {% for player in teams.captain1 %}
+              <li class="roster-item {{ 'captain' if loop.first }}">
+                {{ '👑 ' if loop.first }}{{ player }}
+              </li>
+              {% endfor %}
+            </ul>
+            <p class="text-muted text-center mt-2">{{ teams.captain1|length }} / {{ (players|length / 2)|int }} players</p>
+          </div>
+          
+          <div class="team-board {{ 'active' if active_team == 'captain2' and available|length > 0 }}">
+            <h3>👑 {{ team_names.get('captain2', captains[1] + "'s Team") }}</h3>
+            <ul class="roster-list">
+              {% for player in teams.captain2 %}
+              <li class="roster-item {{ 'captain' if loop.first }}">
+                {{ '👑 ' if loop.first }}{{ player }}
+              </li>
+              {% endfor %}
+            </ul>
+            <p class="text-muted text-center mt-2">{{ teams.captain2|length }} / {{ (players|length / 2)|int }} players</p>
+          </div>
+        </div>
+        
+        {% if available|length > 0 %}
+        <div class="available-players">
+          <h3 class="text-center">Available Players ({{ available|length }})</h3>
+          <form method="POST" action="/draft/pick">
+            <div class="player-grid">
+              {% for player in available %}
+              <button type="submit" name="player" value="{{ player }}" class="player-select-btn">
+                {{ player }}
+              </button>
+              {% endfor %}
+            </div>
+          </form>
+        </div>
+        {% endif %}
+        
+        {% if draft_order|length > 0 %}
+        <div class="draft-history">
+          <h3 class="text-center">Draft History</h3>
+          {% for pick in draft_order|reverse %}
+          <div class="draft-pick">
+            <strong>Pick {{ pick.pick }}:</strong> {{ pick.captain }} selected <strong>{{ pick.player }}</strong>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

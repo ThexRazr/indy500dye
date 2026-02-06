@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Captain Voting - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .voting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    
+    .player-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      text-align: center;
+      border: 3px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .player-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .player-card.selected {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+    
+    .player-card h3 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+    
+    .player-card.selected h3 {
+      color: white;
+    }
+    
+    .vote-count {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+    
+    .player-card.selected .vote-count {
+      color: white;
+    }
+    
+    .submit-section {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 1.5rem;
+      border-top: 3px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>👑 Vote for Team Captains</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="container">
+        <!-- Step 1: Enter your name -->
+        <div class="card" id="nameEntryCard">
+          <h2 class="card-title text-center">Who's Voting?</h2>
+          <p class="text-center text-muted mb-3">
+            Enter your name first, then you'll vote for 2 captains
+          </p>
+          
+          <div class="form-group">
+            <select id="voterName" class="form-input" required>
+              <option value="">Select your name</option>
+              {% for player in players %}
+              <option value="{{ player }}">{{ player }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="text-center mt-2">
+            <button type="button" class="btn btn-primary btn-large" onclick="startVoting()">
+              Continue to Voting
+            </button>
+          </div>
+        </div>
+        
+        <!-- Step 2: Vote for captains (hidden initially) -->
+        <div class="card" id="votingCard" style="display: none;">
+          <h2 class="card-title text-center">Select 2 Captains</h2>
+          <p class="text-center text-muted mb-3">
+            <strong id="voterDisplay"></strong>, pick two players for captain (not yourself!)
+          </p>
+          
+          <form method="POST" action="/captain-voting/vote" id="voteForm">
+            <input type="hidden" name="voter" id="voterInput" />
+            <div class="voting-grid">
+              {% for player in players %}
+              <div class="player-card" data-player="{{ player }}" onclick="selectPlayer('{{ player }}')">
+                <h3>{{ player }}</h3>
+              </div>
+              {% endfor %}
+            </div>
+            
+            <input type="hidden" name="captain1" id="captain1" />
+            <input type="hidden" name="captain2" id="captain2" />
+          </form>
+          
+          <div class="submit-section">
+            <div class="flex-between flex-wrap gap-2">
+              <div>
+                <p><strong>Selected:</strong> <span id="selectedDisplay">None yet</span></p>
+              </div>
+              <div class="flex gap-2">
+                <button type="button" class="btn btn-secondary" onclick="clearSelection()">Clear</button>
+                <button type="submit" form="voteForm" class="btn btn-success" id="submitBtn" disabled>
+                  Submit Vote
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Finalize Section -->
+        <div class="card text-center mt-3">
+          <h3>All done voting?</h3>
+          <p class="text-muted mb-2">Ready to see who the captains are and start the draft!</p>
+          <form method="POST" action="/captain-voting/finalize">
+            <button type="submit" class="btn btn-primary btn-large">
+              Reveal Captains & Start Draft →
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let selected = [];
+    let currentVoter = '';
+    let votedPlayers = new Set();
+    
+    function startVoting() {
+      const voterSelect = document.getElementById('voterName');
+      currentVoter = voterSelect.value;
+      
+      if (!currentVoter) {
+        alert('Please select your name first!');
+        return;
+      }
+      
+      if (votedPlayers.has(currentVoter)) {
+        alert('You already voted!');
+        voterSelect.value = '';
+        return;
+      }
+      
+      // Store voter
+      document.getElementById('voterInput').value = currentVoter;
+      document.getElementById('voterDisplay').textContent = currentVoter;
+      
+      // Disable the voter's own card
+      const voterCard = document.querySelector(`[data-player="${currentVoter}"]`);
+      if (voterCard) {
+        voterCard.style.opacity = '0.3';
+        voterCard.style.pointerEvents = 'none';
+      }
+      
+      // Show voting card, hide name entry
+      document.getElementById('nameEntryCard').style.display = 'none';
+      document.getElementById('votingCard').style.display = 'block';
+    }
+    
+    function selectPlayer(player) {
+      if (player === currentVoter) {
+        alert("You can't vote for yourself!");
+        return;
+      }
+      
+      const card = document.querySelector(`[data-player="${player}"]`);
+      
+      if (selected.includes(player)) {
+        selected = selected.filter(p => p !== player);
+        card.classList.remove('selected');
+      } else if (selected.length < 2) {
+        selected.push(player);
+        card.classList.add('selected');
+      } else {
+        const oldPlayer = selected.shift();
+        const oldCard = document.querySelector(`[data-player="${oldPlayer}"]`);
+        oldCard.classList.remove('selected');
+        
+        selected.push(player);
+        card.classList.add('selected');
+      }
+      
+      updateDisplay();
+    }
+    
+    function updateDisplay() {
+      const display = document.getElementById('selectedDisplay');
+      const submitBtn = document.getElementById('submitBtn');
+      const captain1Input = document.getElementById('captain1');
+      const captain2Input = document.getElementById('captain2');
+      
+      if (selected.length === 0) {
+        display.textContent = 'None yet';
+        submitBtn.disabled = true;
+      } else if (selected.length === 1) {
+        display.textContent = selected[0];
+        submitBtn.disabled = true;
+      } else {
+        display.textContent = selected.join(' & ');
+        submitBtn.disabled = false;
+        captain1Input.value = selected[0];
+        captain2Input.value = selected[1];
+      }
+    }
+    
+    function clearSelection() {
+      document.querySelectorAll('.player-card').forEach(card => {
+        if (card.getAttribute('data-player') !== currentVoter) {
+          card.classList.remove('selected');
+        }
+      });
+      selected = [];
+      updateDisplay();
+    }
+    
+    // Handle form submission
+    document.getElementById('voteForm').addEventListener('submit', function() {
+      votedPlayers.add(currentVoter);
+      // Reset for next voter
+      setTimeout(() => {
+        location.reload();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

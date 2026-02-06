@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Player Registration - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>🎯 Player Registration</h1>
+        <a href="/" class="btn btn-secondary">Home</a>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="container">
+        <div class="card">
+          <h2 class="card-title text-center">Add Your Name to the Roster</h2>
+          <form method="POST" action="/registration/add" class="form-group">
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                name="player_name" 
+                class="form-input" 
+                placeholder="Enter your name" 
+                required 
+                autofocus
+              />
+              <button type="submit" class="btn btn-primary">Add Player</button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="card">
+          <div class="flex-between mb-2">
+            <h2 class="card-title">Current Players ({{ players|length }})</h2>
+            {% if players|length % 2 != 0 %}
+            <span class="badge" style="background: var(--secondary);">⚠️ Odd number - Ghost player will be added</span>
+            {% endif %}
+          </div>
+          
+          {% if players %}
+          <div class="grid grid-4 mt-2">
+            {% for player in players %}
+            <div class="player-item">
+              <span>{{ player }}</span>
+              <form method="POST" action="/registration/remove" style="display: inline;">
+                <input type="hidden" name="player_name" value="{{ player }}" />
+                <button 
+                  type="submit" 
+                  class="btn btn-danger btn-small"
+                  style="padding: 0.3rem 0.8rem; font-size: 0.85rem;"
+                  onclick="return confirm('Remove {{ player }}?');"
+                >
+                  ✕
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-center text-muted">No players registered yet. Be the first!</p>
+          {% endif %}
+        </div>
+        
+        {% if players|length >= 4 %}
+        <div class="text-center mt-3">
+          <form method="POST" action="/registration/complete">
+            <button 
+              type="submit" 
+              class="btn btn-success btn-large"
+              onclick="return confirm('Lock in roster with {{ players|length }} players and proceed to captain voting?');"
+            >
+              Lock Roster & Proceed to Captain Voting →
+            </button>
+          </form>
+          <p class="text-muted mt-1">Minimum 4 players required</p>
+        </div>
+        {% else %}
+        <div class="text-center mt-3">
+          <button class="btn btn-large" style="opacity: 0.5; cursor: not-allowed;" disabled>
+            Need at least 4 players (currently {{ players|length }})
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

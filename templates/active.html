@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Active Tournament - Beer Dye Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .tournament-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .match-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .match-card.completed {
+      border-color: var(--success);
+      background: #f0fdf4;
+    }
+    
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .match-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .matchup {
+      display: grid;
+      grid-template-columns: 2fr auto 2fr;
+      gap: 2rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .team-box {
+      background: var(--bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 3px solid var(--border);
+      text-align: center;
+    }
+    
+    .team-box.winner {
+      background: linear-gradient(135deg, var(--success) 0%, #3db9b0 100%);
+      color: white;
+      border-color: var(--success);
+    }
+    
+    .team-box h4 {
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    
+    .team-box.winner h4 {
+      color: white;
+    }
+    
+    .team-players {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .vs-text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    
+    .result-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="header">
+      <div class="header-content">
+        <h1>🏆 Tournament In Progress</h1>
+        <div class="flex gap-2">
+          <a href="/standings" class="btn btn-secondary">View Standings</a>
+          <a href="/" class="btn btn-secondary">Home</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="tournament-container">
+        <div class="card text-center mb-3">
+          <h2>{{ captains[0] }} vs {{ captains[1] }}</h2>
+          <p class="text-muted">Record match results as games complete</p>
+        </div>
+        
+        {% for match in matches %}
+        <div class="match-card {{ 'completed' if match.result }}">
+          <div class="match-header">
+            <span class="match-number">Match {{ match.id }}</span>
+            {% if match.result %}
+              {% if match.result == 'team1' %}
+              <span class="status-badge badge-win">{{ match.captain1 }} Wins!</span>
+              {% elif match.result == 'team2' %}
+              <span class="status-badge badge-win">{{ match.captain2 }} Wins!</span>
+              {% else %}
+              <span class="status-badge badge-tie">Tie</span>
+              {% endif %}
+            {% else %}
+            <span class="status-badge" style="background: var(--secondary); color: white;">Pending</span>
+            {% endif %}
+          </div>
+          
+          <div class="matchup">
+            <div class="team-box {{ 'winner' if match.result == 'team1' }}">
+              <h4>{{ match.captain1 }}'s Team</h4>
+              <div class="team-players">{{ match.team1[0] }} & {{ match.team1[1] }}</div>
+            </div>
+            
+            <div class="vs-text">VS</div>
+            
+            <div class="team-box {{ 'winner' if match.result == 'team2' }}">
+              <h4>{{ match.captain2 }}'s Team</h4>
+              <div class="team-players">{{ match.team2[0] }} & {{ match.team2[1] }}</div>
+            </div>
+          </div>
+          
+          {% if not match.result %}
+          <form method="POST" action="/active/record-result">
+            <input type="hidden" name="match_id" value="{{ match.id }}" />
+            <div class="result-buttons">
+              <button type="submit" name="result" value="team1" class="btn btn-success">
+                {{ match.captain1 }} Wins
+              </button>
+              <button type="submit" name="result" value="tie" class="btn" style="background: #95a5a6; color: white;">
+                Tie
+              </button>
+              <button type="submit" name="result" value="team2" class="btn btn-success">
+                {{ match.captain2 }} Wins
+              </button>
+            </div>
+          </form>
+          {% else %}
+          <div class="text-center">
+            <form method="POST" action="/active/record-result" style="display: inline;">
+              <input type="hidden" name="match_id" value="{{ match.id }}" />
+              <button type="submit" name="result" value="" class="btn btn-secondary" 
+                      onclick="return confirm('Clear result for Match {{ match.id }}?');">
+                Clear Result
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        
+        <div class="text-center mt-3">
+          <a href="/standings" class="btn btn-primary btn-large">
+            View Full Standings & Results →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

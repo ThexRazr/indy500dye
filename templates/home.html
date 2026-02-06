@@ -3,25 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SoccerSense</title>
-  <!-- styling -->
+  <title>Beer Dye Tournament</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <style>
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #fbb03b 100%);
+      padding: 2rem;
+    }
+    
+    .hero-title {
+      color: white;
+      font-size: clamp(3rem, 8vw, 6rem);
+      text-align: center;
+      margin-bottom: 1rem;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+    }
+    
+    .hero-subtitle {
+      color: white;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      text-align: center;
+      margin-bottom: 3rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+    }
+    
+    .action-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1000px;
+      width: 100%;
+    }
+    
+    .action-card {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: var(--text);
+      border: 4px solid transparent;
+    }
+    
+    .action-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+      border-color: white;
+    }
+    
+    .action-card h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .action-card p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+    }
+    
+    .action-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #4ecdc4;
+      color: white;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    
+    .reset-section {
+      margin-top: 3rem;
+      text-align: center;
+    }
+    
+    .reset-form {
+      display: inline-block;
+    }
+  </style>
 </head>
-<body class="page-home">
-  <!-- background Video -->
-  <div class="bg-video">
-    <video autoplay muted loop playsinline preload="metadata">
-      <source src="{{ url_for('static', filename='media/soccer-bg.mp4') }}" type="video/mp4" />
-    </video>
-  </div>
-  
-  <!-- central body for logo and buttons -->
-  <div class="hero">
-    <img class="logo" src="{{ url_for('static', filename='media/soccersense.png') }}" alt="logo">
-    <div class="button-container">
-      <a href="/track" class="btn btn-primary btn-large">Begin Tracking</a>
-      <a href="/guide" class="btn btn-secondary btn-large">Instructions and Guide</a>
+<body>
+  <div class="hero-section">
+    <h1 class="hero-title">🍺 BEER DYE TOURNAMENT 🍺</h1>
+    <p class="hero-subtitle">Time to find out who's really got game</p>
+    
+    <div class="action-cards">
+      <a href="/registration" class="action-card">
+        <div class="action-icon">🎯</div>
+        <h2>Start Tournament</h2>
+        <p>Begin player registration and kick off a new tournament</p>
+        <div class="btn btn-primary">Let's Go!</div>
+      </a>
+      
+      {% if phase != 'registration' %}
+      <a href="{% if phase == 'voting' %}/captain-voting{% elif phase == 'team_naming' %}/team-naming{% else %}/{{ phase|replace('_', '-') }}{% endif %}" class="action-card">
+        <div class="action-icon">▶️</div>
+        <h2>Continue Tournament</h2>
+        <p>Jump back into the current tournament</p>
+        <span class="status-indicator">{{ phase|replace('_', ' ')|title }} Phase</span>
+      </a>
+      {% endif %}
+      
+      <a href="/standings" class="action-card">
+        <div class="action-icon">🏆</div>
+        <h2>View Standings</h2>
+        <p>Check out current results and leaderboard</p>
+        <div class="btn btn-secondary">View Stats</div>
+      </a>
+    </div>
+    
+    <div class="reset-section">
+      <form method="POST" action="/reset" class="reset-form" onsubmit="return confirm('Are you sure you want to reset the entire tournament? This cannot be undone!');">
+        <button type="submit" class="btn btn-danger">🔄 Reset Tournament</button>
+      </form>
     </div>
   </div>
 </body>
