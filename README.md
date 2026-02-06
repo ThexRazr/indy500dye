@@ -14,8 +14,8 @@ A Flask-based web application for managing beer dye tournaments with snake draft
 
 ## Install Instructions
 
-**Clone the repository locally, Python 3.11 is recommended**
-**Once /venv is created you can just activate it and then run the app through Step 4**
+- **Clone the repository locally, Python 3.11 is recommended**
+- **Once /venv is created you can just activate it and then run the app through Step 4**
 
 1. Create the virtual environment within the project folder
 ```bash
