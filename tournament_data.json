@@ -1,98 +1,28 @@
 {
   "players": [
-    "rodrigo",
-    "paulo",
-    "mia",
-    "jena",
-    "lorde",
-    "hello"
+    "player",
+    "test1",
+    "test2",
+    "yoo"
   ],
-  "captains": [
-    "mia",
-    "jena"
-  ],
+  "captains": [],
   "teams": {
-    "captain1": [
-      "mia",
-      "rodrigo",
-      "hello"
-    ],
-    "captain2": [
-      "jena",
-      "paulo",
-      "lorde"
-    ]
+    "captain1": [],
+    "captain2": []
   },
-  "matches": [
-    {
-      "id": 1,
-      "team1": [
-        "mia",
-        "rodrigo"
-      ],
-      "team2": [
-        "paulo",
-        "lorde"
-      ],
-      "captain1": "mia",
-      "captain2": "jena",
-      "result": ""
-    }
-  ],
-  "phase": "active",
-  "voting_open": false,
-  "draft_order": [
-    {
-      "pick": 1,
-      "captain": "mia",
-      "player": "rodrigo"
-    },
-    {
-      "pick": 2,
-      "captain": "jena",
-      "player": "paulo"
-    },
-    {
-      "pick": 3,
-      "captain": "jena",
-      "player": "lorde"
-    },
-    {
-      "pick": 4,
-      "captain": "mia",
-      "player": "hello"
-    }
-  ],
-  "current_draft_turn": 4,
+  "matches": [],
+  "phase": "voting",
+  "voting_open": true,
+  "draft_order": [],
+  "current_draft_turn": 0,
   "match_results": [],
   "voted_players": [
-    "lorde"
+    "test1"
   ],
   "captain_votes": {
-    "rodrigo": 0,
-    "paulo": 0,
-    "mia": 1,
-    "jena": 1,
-    "lorde": 0,
-    "hello": 0
-  },
-  "available_players": [],
-  "team_names": {
-    "captain1": "killlo",
-    "captain2": "wwwweeeeeeeeeeeeee"
-  },
-  "team_pairings": {
-    "captain1": [
-      [
-        "mia",
-        "rodrigo"
-      ]
-    ],
-    "captain2": [
-      [
-        "paulo",
-        "lorde"
-      ]
-    ]
+    "player": 1,
+    "test1": 0,
+    "test2": 1,
+    "yoo": 0
   }
 }

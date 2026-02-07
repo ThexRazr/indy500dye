@@ -100,14 +100,34 @@
         <!-- Voting Form -->
         <div class="card">
           <h2 class="card-title text-center">Select 2 Captains</h2>
+          
+          {% if is_admin %}
+          <!-- Admin needs to select which player they're voting as -->
+          <div class="form-group mb-3">
+            <label class="form-label text-center" style="display: block;">Who are you voting as?</label>
+            <select id="adminVoterSelect" class="form-input" required onchange="setAdminVoter()">
+              <option value="">Select your name</option>
+              {% for player in players %}
+              {% if player not in voted_players %}
+              <option value="{{ player }}">{{ player }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+          
           <p class="text-center text-muted mb-3">
-            <strong>{{ voter_name }}</strong>, pick two players for captain (not yourself!)
+            <strong><span id="currentVoterDisplay">{{ voter_name if not is_admin else 'Select your name above' }}</span></strong>, pick two players for captain{% if not is_admin %} (not yourself!){% endif %}
           </p>
           
           <form method="POST" action="/captain-voting/vote" id="voteForm">
-            <div class="voting-grid">
+            {% if is_admin %}
+            <input type="hidden" name="voter_name" id="adminVoterInput" />
+            {% endif %}
+            
+            <div class="voting-grid" id="votingGrid">
               {% for player in players %}
-              <div class="player-card {{ 'disabled' if player == voter_name }}" data-player="{{ player }}" onclick="selectPlayer('{{ player }}')">
+              <div class="player-card" data-player="{{ player }}" onclick="selectPlayer('{{ player }}')">
                 <h3>{{ player }}</h3>
               </div>
               {% endfor %}
@@ -151,10 +171,40 @@
   
   <script>
     let selected = [];
-    const voterName = '{{ voter_name }}';
+    let currentVoter = '{{ voter_name if not is_admin else "" }}';
+    const isAdmin = {{ 'true' if is_admin else 'false' }};
+    
+    function setAdminVoter() {
+      if (!isAdmin) return;
+      
+      const select = document.getElementById('adminVoterSelect');
+      currentVoter = select.value;
+      document.getElementById('adminVoterInput').value = currentVoter;
+      document.getElementById('currentVoterDisplay').textContent = currentVoter || 'Select your name above';
+      
+      // Update disabled state for current voter's card
+      updateDisabledCards();
+      clearSelection();
+    }
+    
+    function updateDisabledCards() {
+      document.querySelectorAll('.player-card').forEach(card => {
+        const player = card.getAttribute('data-player');
+        if (player === currentVoter && !isAdmin) {
+          card.classList.add('disabled');
+        } else {
+          card.classList.remove('disabled');
+        }
+      });
+    }
     
     function selectPlayer(player) {
-      if (player === voterName) {
+      if (!currentVoter && isAdmin) {
+        alert('Please select who you are voting as first!');
+        return;
+      }
+      
+      if (player === currentVoter && !isAdmin) {
         return;
       }
       
@@ -199,12 +249,15 @@
     }
     
     function clearSelection() {
-      document.querySelectorAll('.player-card:not(.disabled)').forEach(card => {
+      document.querySelectorAll('.player-card').forEach(card => {
         card.classList.remove('selected');
       });
       selected = [];
       updateDisplay();
     }
+    
+    // Initial setup
+    updateDisabledCards();
   </script>
 </body>
 </html>

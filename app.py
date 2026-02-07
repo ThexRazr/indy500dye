@@ -72,6 +72,12 @@ def admin_logout():
 def registration():
     data = load_data()
     voter_name = get_voter_name()
+    
+    # Check if this voter name is still in the players list (might have been removed by admin)
+    if voter_name and voter_name not in data["players"]:
+        session.pop("voter_name", None)
+        voter_name = None
+    
     return render_template("registration.html", 
                          players=data["players"],
                          is_admin=is_admin(),
@@ -91,6 +97,22 @@ def add_player():
         if not is_admin():
             session["voter_name"] = player_name
     
+    return redirect(url_for("registration"))
+
+@app.post("/registration/signin")
+def signin_player():
+    data = load_data()
+    player_name = request.form.get("player_name", "").strip()
+    
+    # Check if this player exists
+    if player_name in data["players"]:
+        session["voter_name"] = player_name
+    
+    return redirect(url_for("registration"))
+
+@app.post("/registration/signout")
+def signout_player():
+    session.pop("voter_name", None)
     return redirect(url_for("registration"))
 
 @app.post("/registration/remove")
@@ -138,35 +160,42 @@ def captain_voting():
                          is_admin=is_admin(),
                          voter_name=voter_name,
                          has_voted=has_voted,
-                         voting_open=data.get("voting_open", False))
+                         voting_open=data.get("voting_open", False),
+                         voted_players=data.get("voted_players", []))
 
 @app.post("/captain-voting/vote")
 def vote_captain():
     data = load_data()
-    voter_name = get_voter_name()
     
     # Check if voting is open
     if not data.get("voting_open", False):
         return redirect(url_for("captain_voting"))
     
-    # Check if this person has already voted
-    if voter_name in data.get("voted_players", []):
-        return redirect(url_for("captain_voting"))
+    # Get voter name - for admin, get it from form; for users, from session
+    if is_admin():
+        voter_name = request.form.get("voter_name")
+    else:
+        voter_name = get_voter_name()
     
     # Check if voter is registered
     if not voter_name or voter_name not in data["players"]:
-        return redirect(url_for("registration"))
+        return redirect(url_for("captain_voting"))
+    
+    # Check if this person has already voted
+    if "voted_players" not in data:
+        data["voted_players"] = []
+    
+    if voter_name in data["voted_players"]:
+        return redirect(url_for("captain_voting"))
     
     captain1 = request.form.get("captain1")
     captain2 = request.form.get("captain2")
     
-    if captain1 and captain2 and captain1 != captain2:
+    if captain1 and captain2 and captain1 != captain2 and captain1 != voter_name and captain2 != voter_name:
         data["captain_votes"][captain1] = data["captain_votes"].get(captain1, 0) + 1
         data["captain_votes"][captain2] = data["captain_votes"].get(captain2, 0) + 1
         
         # Mark this player as having voted
-        if "voted_players" not in data:
-            data["voted_players"] = []
         data["voted_players"].append(voter_name)
     
     save_data(data)
