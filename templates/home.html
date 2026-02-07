@@ -97,8 +97,8 @@
 </head>
 <body>
   <div class="hero-section">
-    <h1 class="hero-title">🍺 BEER DYE TOURNAMENT 🍺</h1>
-    <p class="hero-subtitle">Time to find out who's really got game</p>
+    <h1 class="hero-title">🍺 2026 INDY 500 DYE TOURNAMENT 🍺</h1>
+    <p class="hero-subtitle">Hoping for a Fred Again headliner</p>
     
     <div class="action-cards">
       <a href="/registration" class="action-card">
@@ -126,9 +126,18 @@
     </div>
     
     <div class="reset-section">
+      {% if session.get('is_admin') %}
+      <p style="color: white; margin-bottom: 1rem;">
+        ✅ Admin Mode Active | <a href="/admin-logout" style="color: white; text-decoration: underline;">Logout</a>
+      </p>
       <form method="POST" action="/reset" class="reset-form" onsubmit="return confirm('Are you sure you want to reset the entire tournament? This cannot be undone!');">
         <button type="submit" class="btn btn-danger">🔄 Reset Tournament</button>
       </form>
+      {% else %}
+      <a href="/admin-login" class="btn" style="background: rgba(255,255,255,0.3); color: white; border: 2px solid white;">
+        🔐 Admin Login
+      </a>
+      {% endif %}
     </div>
   </div>
 </body>

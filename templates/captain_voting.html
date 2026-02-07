@@ -63,6 +63,12 @@
       border-top: 3px solid var(--border);
       margin-top: 2rem;
     }
+
+    .player-card.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -76,41 +82,32 @@
     
     <div class="content">
       <div class="container">
-        <!-- Step 1: Enter your name -->
-        <div class="card" id="nameEntryCard">
-          <h2 class="card-title text-center">Who's Voting?</h2>
-          <p class="text-center text-muted mb-3">
-            Enter your name first, then you'll vote for 2 captains
-          </p>
-          
-          <div class="form-group">
-            <select id="voterName" class="form-input" required>
-              <option value="">Select your name</option>
-              {% for player in players %}
-              <option value="{{ player }}">{{ player }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <div class="text-center mt-2">
-            <button type="button" class="btn btn-primary btn-large" onclick="startVoting()">
-              Continue to Voting
-            </button>
-          </div>
+        {% if not voting_open %}
+        <div class="card text-center">
+          <h2>⏳ Voting Not Open Yet</h2>
+          <p class="text-muted">The admin hasn't opened captain voting yet. Please wait!</p>
+          <a href="/registration" class="btn btn-secondary mt-2">Back to Registration</a>
         </div>
         
-        <!-- Step 2: Vote for captains (hidden initially) -->
-        <div class="card" id="votingCard" style="display: none;">
+        {% elif has_voted %}
+        <div class="card text-center">
+          <h2>✅ Thanks for Voting, {{ voter_name }}!</h2>
+          <p class="text-muted mb-3">You've already cast your vote. Waiting for others to finish...</p>
+          <a href="/standings" class="btn btn-secondary">View Standings</a>
+        </div>
+        
+        {% else %}
+        <!-- Voting Form -->
+        <div class="card">
           <h2 class="card-title text-center">Select 2 Captains</h2>
           <p class="text-center text-muted mb-3">
-            <strong id="voterDisplay"></strong>, pick two players for captain (not yourself!)
+            <strong>{{ voter_name }}</strong>, pick two players for captain (not yourself!)
           </p>
           
           <form method="POST" action="/captain-voting/vote" id="voteForm">
-            <input type="hidden" name="voter" id="voterInput" />
             <div class="voting-grid">
               {% for player in players %}
-              <div class="player-card" data-player="{{ player }}" onclick="selectPlayer('{{ player }}')">
+              <div class="player-card {{ 'disabled' if player == voter_name }}" data-player="{{ player }}" onclick="selectPlayer('{{ player }}')">
                 <h3>{{ player }}</h3>
               </div>
               {% endfor %}
@@ -134,60 +131,30 @@
             </div>
           </div>
         </div>
+        {% endif %}
         
-        <!-- Finalize Section -->
+        <!-- Admin-only finalize section -->
+        {% if is_admin %}
         <div class="card text-center mt-3">
-          <h3>All done voting?</h3>
-          <p class="text-muted mb-2">Ready to see who the captains are and start the draft!</p>
+          <h3>Admin Controls</h3>
+          <p class="text-muted mb-2">{{ voted_players|length }} / {{ players|length }} players have voted</p>
           <form method="POST" action="/captain-voting/finalize">
             <button type="submit" class="btn btn-primary btn-large">
-              Reveal Captains & Start Draft →
+              Finalize Captains & Start Draft →
             </button>
           </form>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>
   
   <script>
     let selected = [];
-    let currentVoter = '';
-    let votedPlayers = new Set();
-    
-    function startVoting() {
-      const voterSelect = document.getElementById('voterName');
-      currentVoter = voterSelect.value;
-      
-      if (!currentVoter) {
-        alert('Please select your name first!');
-        return;
-      }
-      
-      if (votedPlayers.has(currentVoter)) {
-        alert('You already voted!');
-        voterSelect.value = '';
-        return;
-      }
-      
-      // Store voter
-      document.getElementById('voterInput').value = currentVoter;
-      document.getElementById('voterDisplay').textContent = currentVoter;
-      
-      // Disable the voter's own card
-      const voterCard = document.querySelector(`[data-player="${currentVoter}"]`);
-      if (voterCard) {
-        voterCard.style.opacity = '0.3';
-        voterCard.style.pointerEvents = 'none';
-      }
-      
-      // Show voting card, hide name entry
-      document.getElementById('nameEntryCard').style.display = 'none';
-      document.getElementById('votingCard').style.display = 'block';
-    }
+    const voterName = '{{ voter_name }}';
     
     function selectPlayer(player) {
-      if (player === currentVoter) {
-        alert("You can't vote for yourself!");
+      if (player === voterName) {
         return;
       }
       
@@ -232,23 +199,12 @@
     }
     
     function clearSelection() {
-      document.querySelectorAll('.player-card').forEach(card => {
-        if (card.getAttribute('data-player') !== currentVoter) {
-          card.classList.remove('selected');
-        }
+      document.querySelectorAll('.player-card:not(.disabled)').forEach(card => {
+        card.classList.remove('selected');
       });
       selected = [];
       updateDisplay();
     }
-    
-    // Handle form submission
-    document.getElementById('voteForm').addEventListener('submit', function() {
-      votedPlayers.add(currentVoter);
-      // Reset for next voter
-      setTimeout(() => {
-        location.reload();
-      }, 500);
-    });
   </script>
 </body>
 </html>

@@ -11,8 +11,13 @@
     <div class="header">
       <div class="header-content">
         <h1>🎯 Player Registration</h1>
-        <a href="/" class="btn btn-secondary">Home</a>
-      </div>
+          <div class="flex gap-2">
+            {% if session.get('is_admin') %}
+            <a href="/admin-logout" class="btn btn-secondary">Logout</a>
+            {% endif %}
+            <a href="/" class="btn btn-secondary">Home</a>
+          </div>
+        </div>
     </div>
     
     <div class="content">
@@ -47,17 +52,19 @@
             {% for player in players %}
             <div class="player-item">
               <span>{{ player }}</span>
-              <form method="POST" action="/registration/remove" style="display: inline;">
-                <input type="hidden" name="player_name" value="{{ player }}" />
-                <button 
-                  type="submit" 
-                  class="btn btn-danger btn-small"
-                  style="padding: 0.3rem 0.8rem; font-size: 0.85rem;"
-                  onclick="return confirm('Remove {{ player }}?');"
-                >
-                  ✕
-                </button>
-              </form>
+              {% if session.get('is_admin') %}
+                <form method="POST" action="/registration/remove" style="display: inline;">
+                  <input type="hidden" name="player_name" value="{{ player }}" />
+                  <button 
+                    type="submit" 
+                    class="btn btn-danger btn-small"
+                    style="padding: 0.3rem 0.8rem; font-size: 0.85rem;"
+                    onclick="return confirm('Remove {{ player }}?');"
+                  >
+                    ✕
+                  </button>
+                </form>
+                {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -66,25 +73,43 @@
           {% endif %}
         </div>
         
-        {% if players|length >= 4 %}
-        <div class="text-center mt-3">
-          <form method="POST" action="/registration/complete">
-            <button 
-              type="submit" 
-              class="btn btn-success btn-large"
-              onclick="return confirm('Lock in roster with {{ players|length }} players and proceed to captain voting?');"
-            >
-              Lock Roster & Proceed to Captain Voting →
+        {% if is_admin %}
+          {% if players|length >= 4 %}
+          <div class="text-center mt-3">
+            <form method="POST" action="/registration/complete">
+              <button 
+                type="submit" 
+                class="btn btn-success btn-large"
+                onclick="return confirm('Lock in roster with {{ players|length }} players and open voting for captains?');"
+              >
+                🔒 Lock Roster & Open Captain Voting →
+              </button>
+            </form>
+            <p class="text-muted mt-1">This will open captain voting for all registered players</p>
+          </div>
+          {% else %}
+          <div class="text-center mt-3">
+            <button class="btn btn-large" style="opacity: 0.5; cursor: not-allowed;" disabled>
+              Need at least 4 players (currently {{ players|length }})
             </button>
-          </form>
-          <p class="text-muted mt-1">Minimum 4 players required</p>
-        </div>
+          </div>
+          {% endif %}
         {% else %}
-        <div class="text-center mt-3">
-          <button class="btn btn-large" style="opacity: 0.5; cursor: not-allowed;" disabled>
-            Need at least 4 players (currently {{ players|length }})
-          </button>
-        </div>
+          {% if voting_open %}
+          <div class="text-center mt-3">
+            <a href="/captain-voting" class="btn btn-primary btn-large">
+              ✅ Voting is Open! Cast Your Vote →
+            </a>
+            <p class="text-muted mt-1">Click above to vote for team captains</p>
+          </div>
+          {% else %}
+          <div class="text-center mt-3">
+            <div class="card" style="background: var(--bg); border: none;">
+              <p class="text-muted">⏳ Waiting for admin to lock roster and open voting...</p>
+              <p class="text-muted" style="font-size: 0.9rem;">Refresh this page when notified</p>
+            </div>
+          </div>
+          {% endif %}
         {% endif %}
       </div>
     </div>

@@ -112,7 +112,7 @@
     <div class="content">
       <div class="tournament-container">
         <div class="card text-center mb-3">
-          <h2>{{ captains[0] }} vs {{ captains[1] }}</h2>
+          <h2>{{ team_names.get('captain1', captains[0]) }} vs {{ team_names.get('captain2', captains[1]) }}</h2>
           <p class="text-muted">Record match results as games complete</p>
         </div>
         
@@ -122,9 +122,9 @@
             <span class="match-number">Match {{ match.id }}</span>
             {% if match.result %}
               {% if match.result == 'team1' %}
-              <span class="status-badge badge-win">{{ match.captain1 }} Wins!</span>
+              <span class="status-badge badge-win">{{ team_names.get('captain1', match.captain1) }} Wins!</span>
               {% elif match.result == 'team2' %}
-              <span class="status-badge badge-win">{{ match.captain2 }} Wins!</span>
+              <span class="status-badge badge-win">{{ team_names.get('captain2', match.captain2) }} Wins!</span>
               {% else %}
               <span class="status-badge badge-tie">Tie</span>
               {% endif %}
@@ -135,33 +135,37 @@
           
           <div class="matchup">
             <div class="team-box {{ 'winner' if match.result == 'team1' }}">
-              <h4>{{ match.captain1 }}'s Team</h4>
+              <h4>{{ team_names.get('captain1', match.captain1 + "'s Team") }}</h4>
               <div class="team-players">{{ match.team1[0] }} & {{ match.team1[1] }}</div>
             </div>
             
             <div class="vs-text">VS</div>
             
             <div class="team-box {{ 'winner' if match.result == 'team2' }}">
-              <h4>{{ match.captain2 }}'s Team</h4>
+              <h4>{{ team_names.get('captain2', match.captain2 + "'s Team") }}</h4>
               <div class="team-players">{{ match.team2[0] }} & {{ match.team2[1] }}</div>
             </div>
           </div>
           
           {% if not match.result %}
+          {% if is_admin %}
           <form method="POST" action="/active/record-result">
             <input type="hidden" name="match_id" value="{{ match.id }}" />
             <div class="result-buttons">
               <button type="submit" name="result" value="team1" class="btn btn-success">
-                {{ match.captain1 }} Wins
+                {{ team_names.get('captain1', match.captain1) }} Wins
               </button>
               <button type="submit" name="result" value="tie" class="btn" style="background: #95a5a6; color: white;">
                 Tie
               </button>
               <button type="submit" name="result" value="team2" class="btn btn-success">
-                {{ match.captain2 }} Wins
+                {{ team_names.get('captain2', match.captain2) }} Wins
               </button>
             </div>
           </form>
+          {% else %}
+          <p class="text-center text-muted">Pending result...</p>
+          {% endif %}
           {% else %}
           <div class="text-center">
             <form method="POST" action="/active/record-result" style="display: inline;">

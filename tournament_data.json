@@ -1,24 +1,98 @@
 {
   "players": [
-    "ggg",
-    "ddd",
-    "vv",
-    "dddr"
+    "rodrigo",
+    "paulo",
+    "mia",
+    "jena",
+    "lorde",
+    "hello"
   ],
-  "captains": [],
+  "captains": [
+    "mia",
+    "jena"
+  ],
   "teams": {
-    "captain1": [],
-    "captain2": []
+    "captain1": [
+      "mia",
+      "rodrigo",
+      "hello"
+    ],
+    "captain2": [
+      "jena",
+      "paulo",
+      "lorde"
+    ]
   },
-  "matches": [],
-  "phase": "voting",
-  "draft_order": [],
-  "current_draft_turn": 0,
+  "matches": [
+    {
+      "id": 1,
+      "team1": [
+        "mia",
+        "rodrigo"
+      ],
+      "team2": [
+        "paulo",
+        "lorde"
+      ],
+      "captain1": "mia",
+      "captain2": "jena",
+      "result": ""
+    }
+  ],
+  "phase": "active",
+  "voting_open": false,
+  "draft_order": [
+    {
+      "pick": 1,
+      "captain": "mia",
+      "player": "rodrigo"
+    },
+    {
+      "pick": 2,
+      "captain": "jena",
+      "player": "paulo"
+    },
+    {
+      "pick": 3,
+      "captain": "jena",
+      "player": "lorde"
+    },
+    {
+      "pick": 4,
+      "captain": "mia",
+      "player": "hello"
+    }
+  ],
+  "current_draft_turn": 4,
   "match_results": [],
+  "voted_players": [
+    "lorde"
+  ],
   "captain_votes": {
-    "ggg": 0,
-    "ddd": 0,
-    "vv": 0,
-    "dddr": 0
+    "rodrigo": 0,
+    "paulo": 0,
+    "mia": 1,
+    "jena": 1,
+    "lorde": 0,
+    "hello": 0
+  },
+  "available_players": [],
+  "team_names": {
+    "captain1": "killlo",
+    "captain2": "wwwweeeeeeeeeeeeee"
+  },
+  "team_pairings": {
+    "captain1": [
+      [
+        "mia",
+        "rodrigo"
+      ]
+    ],
+    "captain2": [
+      [
+        "paulo",
+        "lorde"
+      ]
+    ]
   }
 }
