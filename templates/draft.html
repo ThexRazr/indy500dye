@@ -139,16 +139,24 @@
       <div class="draft-container">
         {% set current_turn = current_turn %}
         
-        {# Determine current captain based on snake draft logic #}
-        {% if current_turn == 0 %}
-          {% set current_captain = captains[0] %}
-          {% set active_team = 'captain1' %}
-        {% elif current_turn % 4 in [1, 2] %}
-          {% set current_captain = captains[1] %}
-          {% set active_team = 'captain2' %}
+        {# Pass first_pick from app.py into the template context #}
+        {% if first_pick == 'captain1' %}
+          {% set first_idx = 0 %}
+          {% set second_idx = 1 %}
         {% else %}
-          {% set current_captain = captains[0] %}
-          {% set active_team = 'captain1' %}
+          {% set first_idx = 1 %}
+          {% set second_idx = 0 %}
+        {% endif %}
+
+        {% if current_turn == 0 %}
+          {% set current_captain = captains[first_idx] %}
+          {% set active_team = 'captain' ~ (first_idx + 1) %}
+        {% elif current_turn % 4 in [1, 2] %}
+          {% set current_captain = captains[second_idx] %}
+          {% set active_team = 'captain' ~ (second_idx + 1) %}
+        {% else %}
+          {% set current_captain = captains[first_idx] %}
+          {% set active_team = 'captain' ~ (first_idx + 1) %}
         {% endif %}
         
         {% if available|length > 0 %}

@@ -50,6 +50,14 @@
               />
             </div>
           </div>
+
+          <label class="form-label">Who picks first in the draft?</label>
+          <div class="flex gap-2">
+          <select name="first_pick" class="form-input">
+            <option value="captain1">{{ captains[0] }}</option>
+            <option value="captain2">{{ captains[1] }}</option>
+          </select>
+          </div>
           
           <div class="text-center mt-3">
             <button type="submit" class="btn btn-success btn-large">

@@ -27,7 +27,9 @@ def load_data():
         "draft_order": [],
         "current_draft_turn": 0,
         "match_results": [],
-        "voted_players": []  # Track who has voted
+        "voted_players": [],  # Track who has voted
+        "banked_points": {"captain1": 0.0, "captain2": 0.0},
+        "current_round": 1
     }
 
 def save_data(data):
@@ -243,11 +245,14 @@ def save_team_names():
     
     team1_name = request.form.get("team1_name", "").strip()
     team2_name = request.form.get("team2_name", "").strip()
+    first_pick = request.form.get("first_pick", "captain1")
     
     data["team_names"] = {
         "captain1": team1_name if team1_name else f"{data['captains'][0]}'s Team",
         "captain2": team2_name if team2_name else f"{data['captains'][1]}'s Team"
     }
+
+    data["first_pick"] = first_pick
     data["phase"] = "draft"
     
     save_data(data)
@@ -266,43 +271,53 @@ def draft():
                          draft_order=data.get("draft_order", []),
                          current_turn=data.get("current_draft_turn", 0),
                          team_names=data.get("team_names", {}),
-                         players=data["players"])
+                         players=data["players"],
+                        first_pick=data.get("first_pick", "captain1"))
 
 @app.post("/draft/pick")
 def draft_pick():
     if not is_admin():
         return redirect(url_for("draft"))
-    
+
     data = load_data()
     player = request.form.get("player")
     turn = data["current_draft_turn"]
-    
+    first_pick = data.get("first_pick", "captain1")  # NEW
+
+    # Determine first/second captain based on first_pick
+    if first_pick == "captain1":
+        first_key, second_key = "captain1", "captain2"
+        first_idx, second_idx = 0, 1
+    else:
+        first_key, second_key = "captain2", "captain1"
+        first_idx, second_idx = 1, 0
+
     if player and player in data["available_players"]:
-        # True snake draft logic
+        # Snake draft: first captain picks turn 0, then snake alternates
         if turn == 0:
-            team_key = "captain1"
-            captain_idx = 0
+            team_key = first_key
+            captain_idx = first_idx
         elif turn % 4 in [1, 2]:
-            team_key = "captain2"
-            captain_idx = 1
+            team_key = second_key
+            captain_idx = second_idx
         else:
-            team_key = "captain1"
-            captain_idx = 0
-        
+            team_key = first_key
+            captain_idx = first_idx
+
         data["teams"][team_key].append(player)
         data["available_players"].remove(player)
         data["draft_order"].append({
-            "pick": turn + 1, 
-            "captain": data["captains"][captain_idx], 
+            "pick": turn + 1,
+            "captain": data["captains"][captain_idx],
             "player": player
         })
         data["current_draft_turn"] += 1
-        
+
         if len(data["available_players"]) == 0:
             data["phase"] = "team_creation"
-        
+
         save_data(data)
-    
+
     return redirect(url_for("draft"))
 
 @app.get("/team-creation")
@@ -409,7 +424,34 @@ def active_tournament():
                          matches=data.get("matches", []),
                          captains=data.get("captains", []),
                          team_names=data.get("team_names", {}),
+                         current_round=data.get("current_round", 1),
                          is_admin=is_admin())
+
+@app.post("/active/next-round")
+def next_round():
+    if not is_admin():
+        return redirect(url_for("active_tournament"))
+
+    data = load_data()
+
+    # Bank current round points
+    for match in data.get("matches", []):
+        if match["result"] == "team1":
+            data["banked_points"]["captain1"] = data["banked_points"].get("captain1", 0.0) + 1.0
+        elif match["result"] == "team2":
+            data["banked_points"]["captain2"] = data["banked_points"].get("captain2", 0.0) + 1.0
+        elif match["result"] == "tie":
+            data["banked_points"]["captain1"] = data["banked_points"].get("captain1", 0.0) + 0.5
+            data["banked_points"]["captain2"] = data["banked_points"].get("captain2", 0.0) + 0.5
+
+    # Reset matches for round 2, preserve pairings for re-selection
+    data["matches"] = []
+    data["team_pairings"] = {}
+    data["phase"] = "team_creation"  # changed from "match_setup"
+    data["current_round"] = 2
+
+    save_data(data)
+    return redirect(url_for("team_creation"))  # changed from match_setup
 
 @app.post("/active/record-result")
 def record_result():
@@ -431,26 +473,30 @@ def record_result():
 @app.get("/standings")
 def standings():
     data = load_data()
-    
-    captain1_wins = 0
-    captain2_wins = 0
-    ties = 0
-    
+
+    captain1_points = 0.0
+    captain2_points = 0.0
+
     for match in data.get("matches", []):
         if match["result"] == "team1":
-            captain1_wins += 1
+            captain1_points += 1.0
         elif match["result"] == "team2":
-            captain2_wins += 1
+            captain2_points += 1.0
         elif match["result"] == "tie":
-            ties += 1
-    
+            captain1_points += 0.5
+            captain2_points += 0.5
+
+    # Add banked points from previous rounds
+    captain1_points += data.get("banked_points", {}).get("captain1", 0.0)
+    captain2_points += data.get("banked_points", {}).get("captain2", 0.0)
+
     return render_template("standings.html",
-                         captains=data.get("captains", []),
-                         matches=data.get("matches", []),
-                         captain1_wins=captain1_wins,
-                         captain2_wins=captain2_wins,
-                         ties=ties,
-                         team_names=data.get("team_names", {}))
+        captains=data.get("captains", []),
+        matches=data.get("matches", []),
+        captain1_points=captain1_points,
+        captain2_points=captain2_points,
+        team_names=data.get("team_names", {}),
+        current_round=data.get("current_round", 1))
 
 @app.post("/reset")
 def reset_tournament():

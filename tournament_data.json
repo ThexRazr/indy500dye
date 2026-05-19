@@ -1,28 +1,196 @@
 {
   "players": [
-    "player",
-    "test1",
-    "test2",
-    "yoo"
+    "rod",
+    "milo",
+    "josh",
+    "lee",
+    "paul",
+    "jakob",
+    "ryan",
+    "tee",
+    "tyler",
+    "posh",
+    "mile",
+    "wever"
   ],
-  "captains": [],
+  "captains": [
+    "josh",
+    "tee"
+  ],
   "teams": {
-    "captain1": [],
-    "captain2": []
+    "captain1": [
+      "josh",
+      "rod",
+      "jakob",
+      "lee",
+      "posh",
+      "tyler"
+    ],
+    "captain2": [
+      "tee",
+      "milo",
+      "ryan",
+      "paul",
+      "mile",
+      "wever"
+    ]
   },
-  "matches": [],
-  "phase": "voting",
-  "voting_open": true,
-  "draft_order": [],
-  "current_draft_turn": 0,
+  "matches": [
+    {
+      "id": 1,
+      "team1": [
+        "rod",
+        "josh"
+      ],
+      "team2": [
+        "milo",
+        "ryan"
+      ],
+      "captain1": "josh",
+      "captain2": "tee",
+      "result": "team1"
+    },
+    {
+      "id": 2,
+      "team1": [
+        "posh",
+        "tyler"
+      ],
+      "team2": [
+        "paul",
+        "tee"
+      ],
+      "captain1": "josh",
+      "captain2": "tee",
+      "result": "team2"
+    },
+    {
+      "id": 3,
+      "team1": [
+        "jakob",
+        "lee"
+      ],
+      "team2": [
+        "mile",
+        "wever"
+      ],
+      "captain1": "josh",
+      "captain2": "tee",
+      "result": "team2"
+    }
+  ],
+  "phase": "active",
+  "voting_open": false,
+  "draft_order": [
+    {
+      "pick": 1,
+      "captain": "tee",
+      "player": "milo"
+    },
+    {
+      "pick": 2,
+      "captain": "josh",
+      "player": "rod"
+    },
+    {
+      "pick": 3,
+      "captain": "josh",
+      "player": "jakob"
+    },
+    {
+      "pick": 4,
+      "captain": "tee",
+      "player": "ryan"
+    },
+    {
+      "pick": 5,
+      "captain": "tee",
+      "player": "paul"
+    },
+    {
+      "pick": 6,
+      "captain": "josh",
+      "player": "lee"
+    },
+    {
+      "pick": 7,
+      "captain": "josh",
+      "player": "posh"
+    },
+    {
+      "pick": 8,
+      "captain": "tee",
+      "player": "mile"
+    },
+    {
+      "pick": 9,
+      "captain": "tee",
+      "player": "wever"
+    },
+    {
+      "pick": 10,
+      "captain": "josh",
+      "player": "tyler"
+    }
+  ],
+  "current_draft_turn": 10,
   "match_results": [],
   "voted_players": [
-    "test1"
+    "rod"
   ],
+  "banked_points": {
+    "captain1": 2.5,
+    "captain2": 0.5
+  },
+  "current_round": 2,
   "captain_votes": {
-    "player": 1,
-    "test1": 0,
-    "test2": 1,
-    "yoo": 0
+    "rod": 0,
+    "milo": 0,
+    "josh": 1,
+    "lee": 0,
+    "paul": 0,
+    "jakob": 0,
+    "ryan": 0,
+    "tee": 1,
+    "tyler": 0,
+    "posh": 0,
+    "mile": 0,
+    "wever": 0
+  },
+  "available_players": [],
+  "team_names": {
+    "captain1": "Fun team",
+    "captain2": "Mean team"
+  },
+  "first_pick": "captain2",
+  "team_pairings": {
+    "captain1": [
+      [
+        "rod",
+        "josh"
+      ],
+      [
+        "posh",
+        "tyler"
+      ],
+      [
+        "jakob",
+        "lee"
+      ]
+    ],
+    "captain2": [
+      [
+        "milo",
+        "ryan"
+      ],
+      [
+        "mile",
+        "wever"
+      ],
+      [
+        "paul",
+        "tee"
+      ]
+    ]
   }
 }
