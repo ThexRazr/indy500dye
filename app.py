@@ -324,52 +324,34 @@ def draft_pick():
 def team_creation():
     if not is_admin():
         return redirect(url_for("home"))
-    
     data = load_data()
-    
     if "team_pairings" not in data:
         data["team_pairings"] = {}
-    
-    if "captain1" not in data["team_pairings"]:
-        current_captain = 0
-    elif "captain2" not in data["team_pairings"]:
-        current_captain = 1
-    else:
-        data["phase"] = "match_setup"
-        save_data(data)
-        return redirect(url_for("match_setup"))
-    
-    return render_template("team_creation.html", 
+    return render_template("team_creation.html",
                          captains=data["captains"],
                          team_names=data.get("team_names", {}),
-                         teams=data["teams"],
-                         current_captain=current_captain)
+                         teams=data["teams"])
 
 @app.post("/team-creation/save")
 def save_team_pairings():
     if not is_admin():
         return redirect(url_for("team_creation"))
-    
     data = load_data()
-    current_captain = int(request.form.get("current_captain"))
-    
-    teams = []
-    i = 0
-    while f"team{i}_p1" in request.form:
-        p1 = request.form.get(f"team{i}_p1")
-        p2 = request.form.get(f"team{i}_p2")
-        if p1 and p2:
-            teams.append([p1, p2])
-        i += 1
-    
-    if "team_pairings" not in data:
-        data["team_pairings"] = {}
-    
-    captain_key = f"captain{current_captain + 1}"
-    data["team_pairings"][captain_key] = teams
-    
+
+    for captain_key in ["captain1", "captain2"]:
+        teams = []
+        i = 0
+        while f"{captain_key}_team{i}_p1" in request.form:
+            p1 = request.form.get(f"{captain_key}_team{i}_p1")
+            p2 = request.form.get(f"{captain_key}_team{i}_p2")
+            if p1 and p2:
+                teams.append([p1, p2])
+            i += 1
+        data.setdefault("team_pairings", {})[captain_key] = teams
+
+    data["phase"] = "match_setup"
     save_data(data)
-    return redirect(url_for("team_creation"))
+    return redirect(url_for("match_setup"))
 
 @app.get("/match-setup")
 def match_setup():
@@ -453,20 +435,50 @@ def next_round():
     save_data(data)
     return redirect(url_for("team_creation"))  # changed from match_setup
 
+@app.post("/active/submit-score")
+def submit_score():
+    data = load_data()
+    match_id = int(request.form.get("match_id"))
+    score1 = request.form.get("score1", "").strip()
+    score2 = request.form.get("score2", "").strip()
+
+    try:
+        score1 = int(score1)
+        score2 = int(score2)
+    except ValueError:
+        return redirect(url_for("active_tournament"))
+
+    for match in data["matches"]:
+        if match["id"] == match_id and not match.get("result"):
+            match["score1"] = score1
+            match["score2"] = score2
+            if score1 > score2:
+                match["result"] = "team1"
+            elif score2 > score1:
+                match["result"] = "team2"
+            else:
+                match["result"] = "tie"
+            break
+
+    save_data(data)
+    return redirect(url_for("active_tournament"))
+
 @app.post("/active/record-result")
 def record_result():
     if not is_admin():
         return redirect(url_for("active_tournament"))
-    
     data = load_data()
     match_id = int(request.form.get("match_id"))
     result = request.form.get("result")
-    
+
     for match in data["matches"]:
         if match["id"] == match_id:
-            match["result"] = result
+            match["result"] = result if result else None
+            if not result:
+                match.pop("score1", None)
+                match.pop("score2", None)
             break
-    
+
     save_data(data)
     return redirect(url_for("active_tournament"))
 

@@ -204,6 +204,11 @@
                 {% else %}
                 <span class="badge badge-tie">Tie</span>
                 {% endif %}
+                {% if match.score1 is defined and match.score2 is defined %}
+                <p style="margin-top: 0.4rem; font-size: 1.1rem; font-weight: 600; color: var(--primary);">
+                  {{ match.score1 }} — {{ match.score2 }}
+                </p>
+                {% endif %}
               {% else %}
               <span class="badge" style="background: var(--secondary); color: white;">Not Played</span>
               {% endif %}

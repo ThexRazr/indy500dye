@@ -148,37 +148,68 @@
           </div>
           
           {% if not match.result %}
-          {% if is_admin %}
-          <form method="POST" action="/active/record-result">
-            <input type="hidden" name="match_id" value="{{ match.id }}" />
-            <div class="result-buttons">
-              <button type="submit" name="result" value="team1" class="btn btn-success">
-                {{ team_names.get('captain1', match.captain1) }} Wins
-              </button>
-              <button type="submit" name="result" value="tie" class="btn" style="background: #95a5a6; color: white;">
-                Tie
-              </button>
-              <button type="submit" name="result" value="team2" class="btn btn-success">
-                {{ team_names.get('captain2', match.captain2) }} Wins
-              </button>
+            {% if is_admin %}
+              <!-- Admin: click winner or enter scores -->
+              <form method="POST" action="/active/record-result" style="margin-bottom: 0.8rem;">
+                <input type="hidden" name="match_id" value="{{ match.id }}" />
+                <div class="result-buttons">
+                  <button type="submit" name="result" value="team1" class="btn btn-success">
+                    {{ team_names.get('captain1', match.captain1) }} Wins
+                  </button>
+                  <button type="submit" name="result" value="tie" class="btn" style="background: #95a5a6; color: white;">
+                    Tie
+                  </button>
+                  <button type="submit" name="result" value="team2" class="btn btn-success">
+                    {{ team_names.get('captain2', match.captain2) }} Wins
+                  </button>
+                </div>
+              </form>
+              <form method="POST" action="/active/submit-score" style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                <input type="hidden" name="match_id" value="{{ match.id }}" />
+                <input type="number" name="score1" min="0" placeholder="{{ team_names.get('captain1', match.captain1) }} score"
+                      style="width: 140px; padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border); text-align: center; font-family: 'Poppins', sans-serif;" required />
+                <span style="font-weight: bold;">—</span>
+                <input type="number" name="score2" min="0" placeholder="{{ team_names.get('captain2', match.captain2) }} score"
+                      style="width: 140px; padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border); text-align: center; font-family: 'Poppins', sans-serif;" required />
+                <button type="submit" class="btn btn-secondary">Submit Score</button>
+              </form>
+            {% else %}
+              <!-- Players: score entry only -->
+              <form method="POST" action="/active/submit-score" style="display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <input type="hidden" name="match_id" value="{{ match.id }}" />
+                <input type="number" name="score1" min="0" placeholder="{{ team_names.get('captain1', match.captain1) }} score"
+                      style="width: 140px; padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border); text-align: center; font-family: 'Poppins', sans-serif;" required />
+                <span style="font-weight: bold;">—</span>
+                <input type="number" name="score2" min="0" placeholder="{{ team_names.get('captain2', match.captain2) }} score"
+                      style="width: 140px; padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border); text-align: center; font-family: 'Poppins', sans-serif;" required />
+                <button type="submit" class="btn btn-primary">Submit Score</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <!-- Completed match -->
+            {% if is_admin %}
+            <div class="text-center">
+              <p class="text-muted" style="margin-bottom: 0.5rem;">
+                {% if match.score1 is defined and match.score2 is defined %}
+                  Score: {{ match.score1 }} — {{ match.score2 }}
+                {% endif %}
+              </p>
+              <form method="POST" action="/active/record-result" style="display: inline;">
+                <input type="hidden" name="match_id" value="{{ match.id }}" />
+                <button type="submit" name="result" value="" class="btn btn-secondary"
+                        onclick="return confirm('Clear result for Match {{ match.id }}?');">
+                  Clear Result
+                </button>
+              </form>
             </div>
-          </form>
-          
-          {% else %}
-          <p class="text-center text-muted">Pending result...</p>
+            {% else %}
+            <div class="text-center text-muted">
+              {% if match.score1 is defined and match.score2 is defined %}
+                Final Score: {{ match.score1 }} — {{ match.score2 }}
+              {% endif %}
+            </div>
+            {% endif %}
           {% endif %}
-          {% else %}
-          <div class="text-center">
-            <form method="POST" action="/active/record-result" style="display: inline;">
-              <input type="hidden" name="match_id" value="{{ match.id }}" />
-              <button type="submit" name="result" value="" class="btn btn-secondary" 
-                      onclick="return confirm('Clear result for Match {{ match.id }}?');">
-                Clear Result
-              </button>
-            </form>
-          </div>
-          {% endif %}
-        </div>
         {% endfor %}
 
         {% if is_admin and current_round == 1 %}

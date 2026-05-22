@@ -1,82 +1,64 @@
 {
   "players": [
-    "rod",
-    "milo",
-    "josh",
-    "lee",
-    "paul",
-    "jakob",
-    "ryan",
-    "tee",
-    "tyler",
-    "posh",
-    "mile",
-    "wever"
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8"
   ],
   "captains": [
-    "josh",
-    "tee"
+    "1",
+    "2"
   ],
   "teams": {
     "captain1": [
-      "josh",
-      "rod",
-      "jakob",
-      "lee",
-      "posh",
-      "tyler"
+      "1",
+      "3",
+      "6",
+      "7"
     ],
     "captain2": [
-      "tee",
-      "milo",
-      "ryan",
-      "paul",
-      "mile",
-      "wever"
+      "2",
+      "4",
+      "5",
+      "8"
     ]
   },
   "matches": [
     {
       "id": 1,
       "team1": [
-        "rod",
-        "josh"
+        "1",
+        "3"
       ],
       "team2": [
-        "milo",
-        "ryan"
+        "5",
+        "8"
       ],
-      "captain1": "josh",
-      "captain2": "tee",
-      "result": "team1"
+      "captain1": "1",
+      "captain2": "2",
+      "result": "team1",
+      "score1": 11,
+      "score2": 6
     },
     {
       "id": 2,
       "team1": [
-        "posh",
-        "tyler"
+        "6",
+        "7"
       ],
       "team2": [
-        "paul",
-        "tee"
+        "4",
+        "2"
       ],
-      "captain1": "josh",
-      "captain2": "tee",
-      "result": "team2"
-    },
-    {
-      "id": 3,
-      "team1": [
-        "jakob",
-        "lee"
-      ],
-      "team2": [
-        "mile",
-        "wever"
-      ],
-      "captain1": "josh",
-      "captain2": "tee",
-      "result": "team2"
+      "captain1": "1",
+      "captain2": "2",
+      "result": "team1",
+      "score1": 12,
+      "score2": 10
     }
   ],
   "phase": "active",
@@ -84,112 +66,78 @@
   "draft_order": [
     {
       "pick": 1,
-      "captain": "tee",
-      "player": "milo"
+      "captain": "1",
+      "player": "3"
     },
     {
       "pick": 2,
-      "captain": "josh",
-      "player": "rod"
+      "captain": "2",
+      "player": "4"
     },
     {
       "pick": 3,
-      "captain": "josh",
-      "player": "jakob"
+      "captain": "2",
+      "player": "5"
     },
     {
       "pick": 4,
-      "captain": "tee",
-      "player": "ryan"
+      "captain": "1",
+      "player": "6"
     },
     {
       "pick": 5,
-      "captain": "tee",
-      "player": "paul"
+      "captain": "1",
+      "player": "7"
     },
     {
       "pick": 6,
-      "captain": "josh",
-      "player": "lee"
-    },
-    {
-      "pick": 7,
-      "captain": "josh",
-      "player": "posh"
-    },
-    {
-      "pick": 8,
-      "captain": "tee",
-      "player": "mile"
-    },
-    {
-      "pick": 9,
-      "captain": "tee",
-      "player": "wever"
-    },
-    {
-      "pick": 10,
-      "captain": "josh",
-      "player": "tyler"
+      "captain": "2",
+      "player": "8"
     }
   ],
-  "current_draft_turn": 10,
+  "current_draft_turn": 6,
   "match_results": [],
-  "voted_players": [
-    "rod"
-  ],
+  "voted_players": [],
   "banked_points": {
-    "captain1": 2.5,
-    "captain2": 0.5
+    "captain1": 0.0,
+    "captain2": 0.0
   },
-  "current_round": 2,
+  "current_round": 1,
   "captain_votes": {
-    "rod": 0,
-    "milo": 0,
-    "josh": 1,
-    "lee": 0,
-    "paul": 0,
-    "jakob": 0,
-    "ryan": 0,
-    "tee": 1,
-    "tyler": 0,
-    "posh": 0,
-    "mile": 0,
-    "wever": 0
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 0
   },
   "available_players": [],
   "team_names": {
-    "captain1": "Fun team",
-    "captain2": "Mean team"
+    "captain1": "1's Team",
+    "captain2": "2's Team"
   },
-  "first_pick": "captain2",
+  "first_pick": "captain1",
   "team_pairings": {
     "captain1": [
       [
-        "rod",
-        "josh"
+        "1",
+        "3"
       ],
       [
-        "posh",
-        "tyler"
-      ],
-      [
-        "jakob",
-        "lee"
+        "6",
+        "7"
       ]
     ],
     "captain2": [
       [
-        "milo",
-        "ryan"
+        "4",
+        "2"
       ],
       [
-        "mile",
-        "wever"
-      ],
-      [
-        "paul",
-        "tee"
+        "5",
+        "8"
       ]
     ]
   }
