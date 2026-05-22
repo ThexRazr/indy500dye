@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import json
 import os
-from datetime import datetime
+import secrets
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "beer-dye-tournament-secret-key"
+
+# Admin password (change this to whatever you want)
+ADMIN_PASSWORD = "beerdye2025"
 
 # Path to our JSON "database"
 DATA_FILE = "tournament_data.json"
@@ -19,10 +22,14 @@ def load_data():
         "captains": [],
         "teams": {"captain1": [], "captain2": []},
         "matches": [],
-        "phase": "registration",  # registration, voting, draft, team_creation, match_setup, active
+        "phase": "registration",
+        "voting_open": False,  # Admin controls when voting opens
         "draft_order": [],
         "current_draft_turn": 0,
-        "match_results": []
+        "match_results": [],
+        "voted_players": [],  # Track who has voted
+        "banked_points": {"captain1": 0.0, "captain2": 0.0},
+        "current_round": 1
     }
 
 def save_data(data):
@@ -30,15 +37,54 @@ def save_data(data):
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
+def is_admin():
+    """Check if current session has admin access"""
+    return session.get("is_admin", False)
+
+def get_voter_name():
+    """Get the registered voter name from session"""
+    return session.get("voter_name")
+
 @app.get("/")
 def home():
     data = load_data()
-    return render_template("home.html", phase=data.get("phase", "registration"))
+    return render_template("home.html", 
+                         phase=data.get("phase", "registration"),
+                         is_admin=is_admin())
+
+@app.get("/admin-login")
+def admin_login_page():
+    return render_template("admin_login.html")
+
+@app.post("/admin-login")
+def admin_login():
+    password = request.form.get("password", "")
+    if password == ADMIN_PASSWORD:
+        session["is_admin"] = True
+        return redirect(url_for("home"))
+    else:
+        return render_template("admin_login.html", error="Incorrect password")
+
+@app.get("/admin-logout")
+def admin_logout():
+    session["is_admin"] = False
+    return redirect(url_for("home"))
 
 @app.get("/registration")
 def registration():
     data = load_data()
-    return render_template("registration.html", players=data["players"])
+    voter_name = get_voter_name()
+    
+    # Check if this voter name is still in the players list (might have been removed by admin)
+    if voter_name and voter_name not in data["players"]:
+        session.pop("voter_name", None)
+        voter_name = None
+    
+    return render_template("registration.html", 
+                         players=data["players"],
+                         is_admin=is_admin(),
+                         voter_name=voter_name,
+                         voting_open=data.get("voting_open", False))
 
 @app.post("/registration/add")
 def add_player():
@@ -48,11 +94,34 @@ def add_player():
     if player_name and player_name not in data["players"]:
         data["players"].append(player_name)
         save_data(data)
+        
+        # Set this player as the voter for this session (unless admin)
+        if not is_admin():
+            session["voter_name"] = player_name
     
+    return redirect(url_for("registration"))
+
+@app.post("/registration/signin")
+def signin_player():
+    data = load_data()
+    player_name = request.form.get("player_name", "").strip()
+    
+    # Check if this player exists
+    if player_name in data["players"]:
+        session["voter_name"] = player_name
+    
+    return redirect(url_for("registration"))
+
+@app.post("/registration/signout")
+def signout_player():
+    session.pop("voter_name", None)
     return redirect(url_for("registration"))
 
 @app.post("/registration/remove")
 def remove_player():
+    if not is_admin():
+        return redirect(url_for("registration"))
+    
     data = load_data()
     player_name = request.form.get("player_name", "").strip()
     
@@ -64,6 +133,9 @@ def remove_player():
 
 @app.post("/registration/complete")
 def complete_registration():
+    if not is_admin():
+        return redirect(url_for("registration"))
+    
     data = load_data()
     
     # Handle odd number of players by adding ghost
@@ -71,7 +143,9 @@ def complete_registration():
         data["players"].append("GHOST PLAYER")
     
     data["phase"] = "voting"
+    data["voting_open"] = True  # Open voting for users
     data["captain_votes"] = {player: 0 for player in data["players"]}
+    data["voted_players"] = []
     save_data(data)
     
     return redirect(url_for("captain_voting"))
@@ -79,25 +153,61 @@ def complete_registration():
 @app.get("/captain-voting")
 def captain_voting():
     data = load_data()
+    voter_name = get_voter_name()
+    has_voted = voter_name in data.get("voted_players", [])
+    
     return render_template("captain_voting.html", 
                          players=data["players"],
-                         votes=data.get("captain_votes", {}))
+                         votes=data.get("captain_votes", {}),
+                         is_admin=is_admin(),
+                         voter_name=voter_name,
+                         has_voted=has_voted,
+                         voting_open=data.get("voting_open", False),
+                         voted_players=data.get("voted_players", []))
 
 @app.post("/captain-voting/vote")
 def vote_captain():
     data = load_data()
+    
+    # Check if voting is open
+    if not data.get("voting_open", False):
+        return redirect(url_for("captain_voting"))
+    
+    # Get voter name - for admin, get it from form; for users, from session
+    if is_admin():
+        voter_name = request.form.get("voter_name")
+    else:
+        voter_name = get_voter_name()
+    
+    # Check if voter is registered
+    if not voter_name or voter_name not in data["players"]:
+        return redirect(url_for("captain_voting"))
+    
+    # Check if this person has already voted
+    if "voted_players" not in data:
+        data["voted_players"] = []
+    
+    if voter_name in data["voted_players"]:
+        return redirect(url_for("captain_voting"))
+    
     captain1 = request.form.get("captain1")
     captain2 = request.form.get("captain2")
     
-    if captain1 and captain2 and captain1 != captain2:
+    if captain1 and captain2 and captain1 != captain2 and captain1 != voter_name and captain2 != voter_name:
         data["captain_votes"][captain1] = data["captain_votes"].get(captain1, 0) + 1
         data["captain_votes"][captain2] = data["captain_votes"].get(captain2, 0) + 1
+        
+        # Mark this player as having voted
+        data["voted_players"].append(voter_name)
     
     save_data(data)
     return redirect(url_for("captain_voting"))
 
 @app.post("/captain-voting/finalize")
 def finalize_captains():
+    if not is_admin():
+        return redirect(url_for("captain_voting"))
+    
     data = load_data()
     
     # Get top 2 voted players
@@ -113,26 +223,36 @@ def finalize_captains():
     data["draft_order"] = []
     data["current_draft_turn"] = 0
     data["phase"] = "team_naming"
+    data["voting_open"] = False  # Close voting
     
     save_data(data)
     return redirect(url_for("team_naming"))
 
 @app.get("/team-naming")
 def team_naming():
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     data = load_data()
     return render_template("team_naming.html", captains=data["captains"])
 
 @app.post("/team-naming/save")
 def save_team_names():
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     data = load_data()
     
     team1_name = request.form.get("team1_name", "").strip()
     team2_name = request.form.get("team2_name", "").strip()
+    first_pick = request.form.get("first_pick", "captain1")
     
     data["team_names"] = {
         "captain1": team1_name if team1_name else f"{data['captains'][0]}'s Team",
         "captain2": team2_name if team2_name else f"{data['captains'][1]}'s Team"
     }
+
+    data["first_pick"] = first_pick
     data["phase"] = "draft"
     
     save_data(data)
@@ -140,6 +260,9 @@ def save_team_names():
 
 @app.get("/draft")
 def draft():
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     data = load_data()
     return render_template("draft.html", 
                          captains=data["captains"],
@@ -148,54 +271,62 @@ def draft():
                          draft_order=data.get("draft_order", []),
                          current_turn=data.get("current_draft_turn", 0),
                          team_names=data.get("team_names", {}),
-                         players=data["players"])
+                         players=data["players"],
+                        first_pick=data.get("first_pick", "captain1"))
 
 @app.post("/draft/pick")
 def draft_pick():
+    if not is_admin():
+        return redirect(url_for("draft"))
+
     data = load_data()
     player = request.form.get("player")
     turn = data["current_draft_turn"]
-    
+    first_pick = data.get("first_pick", "captain1")  # NEW
+
+    # Determine first/second captain based on first_pick
+    if first_pick == "captain1":
+        first_key, second_key = "captain1", "captain2"
+        first_idx, second_idx = 0, 1
+    else:
+        first_key, second_key = "captain2", "captain1"
+        first_idx, second_idx = 1, 0
+
     if player and player in data["available_players"]:
-        # True snake draft logic
-        # Turn 0: captain1 (A)
-        # Turns 1-2: captain2 (B-B)
-        # Turns 3-4: captain1 (A-A)
-        # Turns 5-6: captain2 (B-B)
-        # etc.
-        
+        # Snake draft: first captain picks turn 0, then snake alternates
         if turn == 0:
-            team_key = "captain1"
-            captain_idx = 0
+            team_key = first_key
+            captain_idx = first_idx
         elif turn % 4 in [1, 2]:
-            team_key = "captain2"
-            captain_idx = 1
+            team_key = second_key
+            captain_idx = second_idx
         else:
-            team_key = "captain1"
-            captain_idx = 0
-        
+            team_key = first_key
+            captain_idx = first_idx
+
         data["teams"][team_key].append(player)
         data["available_players"].remove(player)
         data["draft_order"].append({
-            "pick": turn + 1, 
-            "captain": data["captains"][captain_idx], 
+            "pick": turn + 1,
+            "captain": data["captains"][captain_idx],
             "player": player
         })
         data["current_draft_turn"] += 1
-        
-        # Check if draft is complete
+
         if len(data["available_players"]) == 0:
             data["phase"] = "team_creation"
-        
+
         save_data(data)
-    
+
     return redirect(url_for("draft"))
 
 @app.get("/team-creation")
 def team_creation():
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     data = load_data()
     
-    # Check which captain needs to go
     if "team_pairings" not in data:
         data["team_pairings"] = {}
     
@@ -204,7 +335,6 @@ def team_creation():
     elif "captain2" not in data["team_pairings"]:
         current_captain = 1
     else:
-        # Both done, move to match setup
         data["phase"] = "match_setup"
         save_data(data)
         return redirect(url_for("match_setup"))
@@ -217,6 +347,9 @@ def team_creation():
 
 @app.post("/team-creation/save")
 def save_team_pairings():
+    if not is_admin():
+        return redirect(url_for("team_creation"))
+    
     data = load_data()
     current_captain = int(request.form.get("current_captain"))
     
@@ -229,7 +362,6 @@ def save_team_pairings():
             teams.append([p1, p2])
         i += 1
     
-    # Initialize team_pairings if it doesn't exist
     if "team_pairings" not in data:
         data["team_pairings"] = {}
     
@@ -241,19 +373,25 @@ def save_team_pairings():
 
 @app.get("/match-setup")
 def match_setup():
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     data = load_data()
     return render_template("match_setup.html",
                          captains=data["captains"],
+                         team_names=data.get("team_names", {}),
                          pairings=data.get("team_pairings", {}))
 
 @app.post("/match-setup/create")
 def create_matches():
+    if not is_admin():
+        return redirect(url_for("match_setup"))
+    
     data = load_data()
     
     matches = []
     match_num = 1
     
-    # Get all matchups from form
     i = 0
     while f"match{i}_team1_idx" in request.form:
         team1_idx = int(request.form.get(f"match{i}_team1_idx"))
@@ -268,7 +406,7 @@ def create_matches():
             "team2": team2,
             "captain1": data["captains"][0],
             "captain2": data["captains"][1],
-            "result": None  # Will be "team1", "team2", or "tie"
+            "result": None
         })
         match_num += 1
         i += 1
@@ -284,15 +422,46 @@ def active_tournament():
     data = load_data()
     return render_template("active.html",
                          matches=data.get("matches", []),
-                         captains=data["captains"])
+                         captains=data.get("captains", []),
+                         team_names=data.get("team_names", {}),
+                         current_round=data.get("current_round", 1),
+                         is_admin=is_admin())
+
+@app.post("/active/next-round")
+def next_round():
+    if not is_admin():
+        return redirect(url_for("active_tournament"))
+
+    data = load_data()
+
+    # Bank current round points
+    for match in data.get("matches", []):
+        if match["result"] == "team1":
+            data["banked_points"]["captain1"] = data["banked_points"].get("captain1", 0.0) + 1.0
+        elif match["result"] == "team2":
+            data["banked_points"]["captain2"] = data["banked_points"].get("captain2", 0.0) + 1.0
+        elif match["result"] == "tie":
+            data["banked_points"]["captain1"] = data["banked_points"].get("captain1", 0.0) + 0.5
+            data["banked_points"]["captain2"] = data["banked_points"].get("captain2", 0.0) + 0.5
+
+    # Reset matches for round 2, preserve pairings for re-selection
+    data["matches"] = []
+    data["team_pairings"] = {}
+    data["phase"] = "team_creation"  # changed from "match_setup"
+    data["current_round"] = 2
+
+    save_data(data)
+    return redirect(url_for("team_creation"))  # changed from match_setup
 
 @app.post("/active/record-result")
 def record_result():
+    if not is_admin():
+        return redirect(url_for("active_tournament"))
+    
     data = load_data()
     match_id = int(request.form.get("match_id"))
-    result = request.form.get("result")  # "team1", "team2", or "tie"
+    result = request.form.get("result")
     
-    # Find and update match
     for match in data["matches"]:
         if match["id"] == match_id:
             match["result"] = result
@@ -304,30 +473,36 @@ def record_result():
 @app.get("/standings")
 def standings():
     data = load_data()
-    
-    # Calculate standings
-    captain1_wins = 0
-    captain2_wins = 0
-    ties = 0
-    
+
+    captain1_points = 0.0
+    captain2_points = 0.0
+
     for match in data.get("matches", []):
         if match["result"] == "team1":
-            captain1_wins += 1
+            captain1_points += 1.0
         elif match["result"] == "team2":
-            captain2_wins += 1
+            captain2_points += 1.0
         elif match["result"] == "tie":
-            ties += 1
-    
+            captain1_points += 0.5
+            captain2_points += 0.5
+
+    # Add banked points from previous rounds
+    captain1_points += data.get("banked_points", {}).get("captain1", 0.0)
+    captain2_points += data.get("banked_points", {}).get("captain2", 0.0)
+
     return render_template("standings.html",
-                         captains=data.get("captains", []),
-                         matches=data.get("matches", []),
-                         captain1_wins=captain1_wins,
-                         captain2_wins=captain2_wins,
-                         ties=ties)
+        captains=data.get("captains", []),
+        matches=data.get("matches", []),
+        captain1_points=captain1_points,
+        captain2_points=captain2_points,
+        team_names=data.get("team_names", {}),
+        current_round=data.get("current_round", 1))
 
 @app.post("/reset")
 def reset_tournament():
-    """Reset everything and start fresh"""
+    if not is_admin():
+        return redirect(url_for("home"))
+    
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
     return redirect(url_for("home"))

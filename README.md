@@ -2,6 +2,8 @@
 
 A Flask-based web application for managing beer dye tournaments with snake drafts, team creation, and live match tracking.
 
+Hosted on render: https://indy500dye.onrender.com
+
 ## Features
 
 - **Player Registration**: Everyone enters their name to join

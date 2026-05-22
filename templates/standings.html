@@ -139,53 +139,50 @@
       <div class="standings-container">
         {% if captains %}
         <div class="leaderboard">
-          <h2 class="text-center mb-3">🎖️ Captain Leaderboard</h2>
+          <h2 class="text-center mb-3">🎖️ Team Leaderboard</h2>
           
-          {% if captain1_wins > captain2_wins %}
-          <div class="captain-row winner">
-            <div class="rank">1st</div>
-            <div class="captain-name">👑 {{ captains[0] }}</div>
-            <div class="wins-display">{{ captain1_wins }} Wins</div>
-            <div class="trophy-icon">🏆</div>
-          </div>
-          <div class="captain-row">
-            <div class="rank">2nd</div>
-            <div class="captain-name">{{ captains[1] }}</div>
-            <div class="wins-display">{{ captain2_wins }} Wins</div>
-            <div></div>
-          </div>
-          {% elif captain2_wins > captain1_wins %}
-          <div class="captain-row winner">
-            <div class="rank">1st</div>
-            <div class="captain-name">👑 {{ captains[1] }}</div>
-            <div class="wins-display">{{ captain2_wins }} Wins</div>
-            <div class="trophy-icon">🏆</div>
-          </div>
-          <div class="captain-row">
-            <div class="rank">2nd</div>
-            <div class="captain-name">{{ captains[0] }}</div>
-            <div class="wins-display">{{ captain1_wins }} Wins</div>
-            <div></div>
-          </div>
-          {% else %}
-          <div class="captain-row" style="border: 3px solid var(--secondary);">
-            <div class="rank">🤝</div>
-            <div class="captain-name">{{ captains[0] }}</div>
-            <div class="wins-display">{{ captain1_wins }} Wins</div>
-            <div></div>
-          </div>
-          <div class="captain-row" style="border: 3px solid var(--secondary);">
-            <div class="rank">🤝</div>
-            <div class="captain-name">{{ captains[1] }}</div>
-            <div class="wins-display">{{ captain2_wins }} Wins</div>
-            <div></div>
-          </div>
-          <p class="text-center mt-2 text-muted"><strong>It's a tie!</strong></p>
-          {% endif %}
-          
-          {% if ties > 0 %}
-          <p class="text-center mt-3 text-muted">{{ ties }} match{{ 'es' if ties != 1 }} ended in a tie</p>
-          {% endif %}
+          {% if captain1_points > captain2_points %}
+            <div class="captain-row winner">
+              <div class="rank">1st</div>
+              <div class="captain-name">👑 {{ team_names.get('captain1', captains[0]) }}</div>
+              <div class="wins-display">{{ captain1_points }} Pts</div>
+              <div class="trophy-icon">🏆</div>
+            </div>
+            <div class="captain-row">
+              <div class="rank">2nd</div>
+              <div class="captain-name">{{ team_names.get('captain2', captains[1]) }}</div>
+              <div class="wins-display">{{ captain2_points }} Pts</div>
+              <div></div>
+            </div>
+            {% elif captain2_points > captain1_points %}
+            <div class="captain-row winner">
+              <div class="rank">1st</div>
+              <div class="captain-name">👑 {{ team_names.get('captain2', captains[1]) }}</div>
+              <div class="wins-display">{{ captain2_points }} Pts</div>
+              <div class="trophy-icon">🏆</div>
+            </div>
+            <div class="captain-row">
+              <div class="rank">2nd</div>
+              <div class="captain-name">{{ team_names.get('captain1', captains[0]) }}</div>
+              <div class="wins-display">{{ captain1_points }} Pts</div>
+              <div></div>
+            </div>
+            {% else %}
+            <div class="captain-row" style="border: 3px solid var(--secondary);">
+              <div class="rank">🤝</div>
+              <div class="captain-name">{{ team_names.get('captain1', captains[0]) }}</div>
+              <div class="wins-display">{{ captain1_points }} Pts</div>
+              <div></div>
+            </div>
+            <div class="captain-row" style="border: 3px solid var(--secondary);">
+              <div class="rank">🤝</div>
+              <div class="captain-name">{{ team_names.get('captain2', captains[1]) }}</div>
+              <div class="wins-display">{{ captain2_points }} Pts</div>
+              <div></div>
+            </div>
+            <p class="text-center mt-2 text-muted"><strong>It's a tie!</strong></p>
+            {% endif %}
+        
         </div>
         {% endif %}
         
@@ -201,9 +198,9 @@
               <h3>Match {{ match.id }}</h3>
               {% if match.result %}
                 {% if match.result == 'team1' %}
-                <span class="badge badge-win">{{ match.captain1 }} Won</span>
+                <span class="badge badge-win">{{ match.team1[0] }} & {{ match.team1[1] }} Won</span>
                 {% elif match.result == 'team2' %}
-                <span class="badge badge-win">{{ match.captain2 }} Won</span>
+                <span class="badge badge-win">{{ match.team2[0] }} & {{ match.team2[1] }} Won</span>
                 {% else %}
                 <span class="badge badge-tie">Tie</span>
                 {% endif %}

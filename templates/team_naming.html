@@ -19,7 +19,7 @@
       <div class="container">
         <div class="card text-center mb-3">
           <h2>Captains, choose your team names!</h2>
-          <p class="text-muted">Make it legendary (or hilarious)</p>
+          <p class="text-muted">Not the Boilermakers</p>
         </div>
         
         <form method="POST" action="/team-naming/save">
@@ -49,6 +49,14 @@
                 maxlength="50"
               />
             </div>
+          </div>
+
+          <label class="form-label">Who picks first in the draft?</label>
+          <div class="flex gap-2">
+          <select name="first_pick" class="form-input">
+            <option value="captain1">{{ captains[0] }}</option>
+            <option value="captain2">{{ captains[1] }}</option>
+          </select>
           </div>
           
           <div class="text-center mt-3">

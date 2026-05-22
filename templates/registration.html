@@ -11,15 +11,39 @@
     <div class="header">
       <div class="header-content">
         <h1>🎯 Player Registration</h1>
-        <a href="/" class="btn btn-secondary">Home</a>
+        <div class="flex gap-2">
+          {% if is_admin %}
+          <a href="/admin-logout" class="btn btn-secondary">Logout</a>
+          {% endif %}
+          <a href="/" class="btn btn-secondary">Home</a>
+        </div>
       </div>
     </div>
     
     <div class="content">
       <div class="container">
+        {% if voter_name %}
+        <!-- User is signed in -->
         <div class="card">
-          <h2 class="card-title text-center">Add Your Name to the Roster</h2>
+          <h2 class="card-title text-center">Welcome, {{ voter_name }}! ✅</h2>
+          <p class="text-center text-muted">You're registered and ready to go!</p>
+          
+          {% if not is_admin %}
+          <div class="text-center mt-2">
+            <form method="POST" action="/registration/signout" style="display: inline;">
+              <button type="submit" class="btn btn-secondary">Sign Out</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <!-- User needs to add name or sign in -->
+        <div class="card">
+          <h2 class="card-title text-center">Join the Tournament</h2>
+          
+          <!-- Add Name Form (for new players) -->
           <form method="POST" action="/registration/add" class="form-group">
+            <label class="form-label">Add Your Name</label>
             <div class="flex gap-2">
               <input 
                 type="text" 
@@ -29,10 +53,29 @@
                 required 
                 autofocus
               />
-              <button type="submit" class="btn btn-primary">Add Player</button>
+              <button type="submit" class="btn btn-primary">Add Name</button>
+            </div>
+          </form>
+          
+          <div style="text-align: center; margin: 1.5rem 0; color: var(--text-light);">
+            — OR —
+          </div>
+          
+          <!-- Sign In Form (for returning players) -->
+          <form method="POST" action="/registration/signin" class="form-group">
+            <label class="form-label">Already Registered? Sign In</label>
+            <div class="flex gap-2">
+              <select name="player_name" class="form-input" required>
+                <option value="">Select your name</option>
+                {% for player in players %}
+                <option value="{{ player }}">{{ player }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-secondary">Sign In</button>
             </div>
           </form>
         </div>
+        {% endif %}
         
         <div class="card">
           <div class="flex-between mb-2">
@@ -46,7 +89,8 @@
           <div class="grid grid-4 mt-2">
             {% for player in players %}
             <div class="player-item">
-              <span>{{ player }}</span>
+              <span>{{ player }}{% if player == voter_name %} ✓{% endif %}</span>
+              {% if is_admin %}
               <form method="POST" action="/registration/remove" style="display: inline;">
                 <input type="hidden" name="player_name" value="{{ player }}" />
                 <button 
@@ -58,6 +102,7 @@
                   ✕
                 </button>
               </form>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
@@ -66,25 +111,43 @@
           {% endif %}
         </div>
         
-        {% if players|length >= 4 %}
-        <div class="text-center mt-3">
-          <form method="POST" action="/registration/complete">
-            <button 
-              type="submit" 
-              class="btn btn-success btn-large"
-              onclick="return confirm('Lock in roster with {{ players|length }} players and proceed to captain voting?');"
-            >
-              Lock Roster & Proceed to Captain Voting →
+        {% if is_admin %}
+          {% if players|length >= 4 %}
+          <div class="text-center mt-3">
+            <form method="POST" action="/registration/complete">
+              <button 
+                type="submit" 
+                class="btn btn-success btn-large"
+                onclick="return confirm('Lock in roster with {{ players|length }} players and open voting for captains?');"
+              >
+                🔒 Lock Roster & Open Captain Voting →
+              </button>
+            </form>
+            <p class="text-muted mt-1">This will open captain voting for all registered players</p>
+          </div>
+          {% else %}
+          <div class="text-center mt-3">
+            <button class="btn btn-large" style="opacity: 0.5; cursor: not-allowed;" disabled>
+              Need at least 4 players (currently {{ players|length }})
             </button>
-          </form>
-          <p class="text-muted mt-1">Minimum 4 players required</p>
-        </div>
+          </div>
+          {% endif %}
         {% else %}
-        <div class="text-center mt-3">
-          <button class="btn btn-large" style="opacity: 0.5; cursor: not-allowed;" disabled>
-            Need at least 4 players (currently {{ players|length }})
-          </button>
-        </div>
+          {% if voting_open %}
+          <div class="text-center mt-3">
+            <a href="/captain-voting" class="btn btn-primary btn-large">
+              ✅ Voting is Open! Cast Your Vote →
+            </a>
+            <p class="text-muted mt-1">Click above to vote for team captains</p>
+          </div>
+          {% else %}
+          <div class="text-center mt-3">
+            <div class="card" style="background: var(--bg); border: none;">
+              <p class="text-muted">⏳ Waiting for admin to lock roster and open voting...</p>
+              <p class="text-muted" style="font-size: 0.9rem;">Refresh this page when notified</p>
+            </div>
+          </div>
+          {% endif %}
         {% endif %}
       </div>
     </div>
